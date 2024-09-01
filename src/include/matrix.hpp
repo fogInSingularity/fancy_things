@@ -10,7 +10,9 @@ class IMat3x3 {
     static const size_t kMatrixWidth_  = 3;
     T mat_memory[kMatrixHeight_ * kMatrixWidth_];
   public:
-    explicit IMat3x3(const T* matrix_array);
+    explicit IMat3x3(const T* matrix_array) noexcept;
+    
+    friend IMat3x3<T> operator*(const IMat3x3& matrix_c, const IMat3x3<T>& matrix_b);
 };
 
 #endif // MATRIX_HPP_

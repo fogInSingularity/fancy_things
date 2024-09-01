@@ -8,7 +8,7 @@
 #include "logging.h"
 
 int main(const int argc, const char** argv) {
-    LoggingStatus log_status = LoggingSetup("fancy_thing.log");
+    LoggingStatus log_status = LoggingSetup("fancy_thing.log"); 
     assert(log_status == kLoggingStatus_Ok);
 
     if (argc < 2) {

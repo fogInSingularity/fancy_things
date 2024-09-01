@@ -46,7 +46,7 @@ void FancyThings::MainLoop(sf::RenderWindow* window,
     
     if (render_state->use_algo) {
         // Filters::ThresholdFilter(raw_image, raw_image_size);
-        Filters::ReversFilter(raw_image, raw_image_size);
+        Filters::ReversFilter(reinterpret_cast<Filters::Pixel*>(raw_image), image_size.x, image_size.y);
         render_state->use_algo = false;
     }
 

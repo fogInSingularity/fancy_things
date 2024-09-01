@@ -10,3 +10,5 @@ makefile
 .cache/
 compile_commands.json
 src/build
+perf.data
+perf.data.old

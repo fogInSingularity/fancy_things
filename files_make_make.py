@@ -12,11 +12,11 @@ EXE_LOG = 2>log
 
 include = "\nINCLUDE = -Isrc/include/ -Ilib_cpp/include/\n"
 
-cpp_files = "src/source/main.cpp lib_cpp/source/convert_endian.cpp src/source/fancy_things.cpp src/source/filters.cpp src/source/matrix.cpp"
-cpp_objects = "src/build/main.o src/build/convert_endian.o src/build/fancy_things.o src/build/filters.o src/build/matrix.o"
+cpp_files = "src/source/main.cpp src/source/fancy_things.cpp src/source/filters.cpp src/source/matrix.cpp"
+cpp_objects = "src/build/main.o src/build/fancy_things.o src/build/filters.o src/build/matrix.o"
 
-с_files = "lib_cpp/source/swap.c lib_cpp/source/check_endian.c lib_cpp/source/logging.c lib_cpp/source/file_wraper.c lib_cpp/source/my_assert.c"
-c_objects = "src/build/swap.o src/build/check_endian.o src/build/logging.o src/build/file_wraper.o src/build/my_assert.o"
+с_files = "lib_cpp/source/swap.c lib_cpp/source/convert_endian.c lib_cpp/source/check_endian.c lib_cpp/source/logging.c lib_cpp/source/file_wraper.c lib_cpp/source/my_assert.c"
+c_objects = "src/build/swap.o src/build/convert_endian.o src/build/check_endian.o src/build/logging.o src/build/file_wraper.o src/build/my_assert.o"
 
 debug_target = """debug: all
 all: {} {}

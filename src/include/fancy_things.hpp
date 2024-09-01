@@ -4,7 +4,7 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
 
-#include "attr.hpp"
+#include "attr.h"
 
 namespace FancyThings {
     UNUSED static const char* WindowName = "fancy thigs";
@@ -18,6 +18,6 @@ namespace FancyThings {
     void MainLoop(sf::RenderWindow* window, 
                   sf::Image* image, 
                   FancyThings::RenderState* render_state);
-}
+} // namespace FancyThings 
 
 #endif // FANCY_THINGS_HPP_
