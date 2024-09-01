@@ -1,0 +1,12 @@
+__pycache__/
+.clang-tidy
+debug.mk
+release.mk
+analyze.mk
+fancy_thing.log
+fancy_things
+image.png
+makefile
+.cache/
+compile_commands.json
+src/build
