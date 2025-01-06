@@ -4,12 +4,10 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
 
-#include "attr.h"
-
 namespace FancyThings {
-    UNUSED static const char* WindowName = "fancy thigs";
-    UNUSED static const unsigned int WindowWidth  = 1920;
-    UNUSED static const unsigned int WindowHeight = 1080; 
+    static const char* WindowName = "fancy thigs";
+    static const unsigned int WindowWidth  = 1920;
+    static const unsigned int WindowHeight = 1080; 
 
     struct RenderState {
         bool use_algo;

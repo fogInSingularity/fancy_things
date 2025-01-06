@@ -22,24 +22,30 @@ class Pixel {
         uint8_t w_;
     };
   public:
-    Pixel(uint8_t red, uint8_t green, uint8_t blue, uint8_t alpha) noexcept;
-    Pixel() noexcept;
-    // ~Pixel() = default;
+    Pixel(uint8_t red, uint8_t green, uint8_t blue, uint8_t alpha) noexcept {
+        red_ = red;
+        green_ = green;
+        blue_ = blue;
+        alpha_ = alpha;
+    }
+
+    Pixel() noexcept {
+        red_   = 0;
+        green_ = 0; 
+        blue_  = 0;
+        alpha_ = 0;
+    }
         
-    void SetRedColor(uint8_t red) noexcept;
-    void SetGreenColor(uint8_t green) noexcept;
-    void SetBlueColor(uint8_t blue) noexcept;
-    void SetAlphaColor(uint8_t alpha) noexcept; 
+    void SetRedColor(uint8_t red)     noexcept { red_ = red; }
+    void SetGreenColor(uint8_t green) noexcept { green_ = green; }
+    void SetBlueColor(uint8_t blue)   noexcept { blue_ = blue; }
+    void SetAlphaColor(uint8_t alpha) noexcept { alpha_ = alpha; }
 
-    uint8_t GetRedColor() const noexcept;
-    uint8_t GetGreenColor() const noexcept;
-    uint8_t GetBlueColor() const noexcept;
-    uint8_t GetAlphaColor() const noexcept;
+    uint8_t GetRedColor()   const noexcept { return red_; }
+    uint8_t GetGreenColor() const noexcept { return green_; }
+    uint8_t GetBlueColor()  const noexcept { return blue_; }
+    uint8_t GetAlphaColor() const noexcept { return alpha_; }
 
-    // Pixel operator*(const Pixel pixel, const uint8_t scalar) noexcept; 
-    // Pixel operator+(const Pixel pixel_a, const Pixel pixel_b) noexcept; 
-    // Pixel operator+(const Pixel pixel, const uint8_t scalar) noexcept;
-    
     Pixel& operator+=(Pixel pixel) noexcept {
         red_   += pixel.red_; 
         green_ += pixel.green_;

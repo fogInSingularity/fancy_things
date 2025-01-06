@@ -4,15 +4,25 @@
 
 #include <SFML/Graphics.hpp>
 
-#include "fancy_things.hpp"
-#include "logging.h"
+#include "spdlog/common.h"
+#include "spdlog/spdlog.h"
+#include "spdlog/sinks/basic_file_sink.h"
 
-int main(const int argc, const char** argv) {
-    LoggingStatus log_status = LoggingSetup("fancy_thing.log"); 
-    assert(log_status == kLoggingStatus_Ok);
+#include "fancy_things.hpp"
+
+int main(const int argc, const char* argv[]) {
+    auto logger = spdlog::basic_logger_mt("fancy_things", "fancy_things.log", true);
+    spdlog::set_default_logger(logger);
+
+#if defined (NDEBUG)
+    spdlog::set_level(spdlog::level::info);
+#else // NDEBUG
+    spdlog::flush_on(spdlog::level::trace);
+    spdlog::set_level(spdlog::level::debug);
+#endif // NDEBUG
 
     if (argc < 2) {
-        Log("0 files had been passed\n");
+        spdlog::error("0 files had been passed\n");
         std::cerr << "0 files had been passed" << std::endl;
         return EXIT_FAILURE;
     }
@@ -20,7 +30,7 @@ int main(const int argc, const char** argv) {
     sf::Image image;
     bool is_load_successful = image.loadFromFile(std::string(argv[1]));
     if (!is_load_successful) {
-        Log("file load wherent successful\n");
+        spdlog::error("file load wherent successful\n");
         std::cerr << "file load wherent successful" << std::endl;
         return EXIT_FAILURE;
     }

@@ -5,8 +5,12 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Window/Keyboard.hpp>
 
+#include "spdlog/common.h"
+#include "spdlog/spdlog.h"
+#include "spdlog/sinks/basic_file_sink.h"
+
 #include "filters.hpp"
-#include "logging.h"
+#include "to_str.hpp"
 
 // static ----------------------------------------------------------------------
 
@@ -36,7 +40,7 @@ void FancyThings::MainLoop(sf::RenderWindow* window,
     RenderLoop(window, render_state, image_sprite);
 
     sf::Vector2u image_size = image->getSize();
-    Log("%s: %u, %s: %u\n", STRINGIFY(image_size.x), image_size.x, STRINGIFY(image_size.y), image_size.y);
+    spdlog::debug("%s: %u, %s: %u\n", TO_STR(image_size.x), image_size.x, TO_STR(image_size.y), image_size.y);
 
     const size_t raw_image_size = static_cast<size_t>(image_size.x * image_size.y) * kRGBAPixelSize;
     sf::Uint8* raw_image = new sf::Uint8[raw_image_size];
@@ -45,9 +49,9 @@ void FancyThings::MainLoop(sf::RenderWindow* window,
               raw_image);
     
     if (render_state->use_algo) {
-        Filters::GaussianBlur(reinterpret_cast<Pixel*>(raw_image), image_size.x, image_size.y);
+        // Filters::GaussianBlur(reinterpret_cast<Pixel*>(raw_image), image_size.x, image_size.y);
         // Filters::ThresholdFilter(raw_image, raw_image_size);
-        // Filters::ReversFilter(reinterpret_cast<Pixel*>(raw_image), image_size.x, image_size.y);
+        Filters::ReversFilter(reinterpret_cast<Pixel*>(raw_image), image_size.x, image_size.y);
         render_state->use_algo = false;
     }
 

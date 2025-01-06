@@ -4,7 +4,9 @@
 #include <cstddef>
 #include <cstring>
 
-#include "logging.h"
+#include "spdlog/common.h"
+#include "spdlog/spdlog.h"
+#include "spdlog/sinks/basic_file_sink.h"
 
 enum class MatrixException {
     Ok                    = -1,
@@ -46,8 +48,6 @@ template <class T>
 Matrix<T>::Matrix(const size_t dim_x, const size_t dim_y, const T* matrix_array) {
     assert(matrix_array != nullptr);
 
-    LogFunctionEntry();
- 
     mat_memory_ = nullptr;
     dim_x_ = 0;
     dim_y_ = 0;   
@@ -60,8 +60,6 @@ Matrix<T>::Matrix(const size_t dim_x, const size_t dim_y, const T* matrix_array)
 
 template <class T>
 Matrix<T>::Matrix(const size_t dim_x, const size_t dim_y) {
-    LogFunctionEntry();
-
     mat_memory_ = nullptr;
     dim_x_ = 0;
     dim_y_ = 0;
@@ -94,10 +92,8 @@ void Matrix<T>::SetValues(const T* matrix_values) noexcept {
 
 template <class T>
 Matrix<T> operator*(const Matrix<T>& matrix_a, const Matrix<T>& matrix_b) {
-    LogFunctionEntry();
-
     if (matrix_a.dim_x_ != matrix_b.dim_y_) { 
-        Log("invalid matrix sizes for multiplication"); 
+        spdlog::error("invalid matrix sizes for multiplication"); 
         throw MatrixException::InvalidMultiplication;
     }
 
@@ -125,15 +121,6 @@ static void MatrixMultiply(T* matrix_c, const T* matrix_a, const T* matrix_b,
     assert(matrix_c != nullptr);
     assert(matrix_a != nullptr);
     assert(matrix_b != nullptr);
-
-    LogFunctionEntry();
-    LogVariable("%p", matrix_c);
-    LogVariable("%p", matrix_a);
-    LogVariable("%p", matrix_b);
-
-    LogVariable("%lu", dim_m);
-    LogVariable("%lu", dim_n);
-    LogVariable("%lu", dim_p);
 
     for (size_t i = 0; i < dim_m; i++) {
         for (size_t j = 0; j < dim_p; j++) {

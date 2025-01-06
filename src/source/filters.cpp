@@ -6,7 +6,10 @@
 #include <climits>
 #include <cstring>
 
-#include "logging.h"
+#include "spdlog/common.h"
+#include "spdlog/spdlog.h"
+#include "spdlog/sinks/basic_file_sink.h"
+
 #include "matrix.hpp"
 
 // static -----------------------------------------------------------------------------------------
@@ -16,8 +19,6 @@
 void Filters::ReversFilter(Pixel* image, const size_t image_size_x, const size_t image_size_y) {
     assert(image != nullptr);
  
-    LogFunctionEntry();
-
     for (Pixel* iter_pixels = image; iter_pixels < image + image_size_x * image_size_y; iter_pixels++) {
         // iter_pixels->red = UCHAR_MAX - iter_pixels->red;
         // iter_pixels->green = UCHAR_MAX - iter_pixels->green;
@@ -31,13 +32,11 @@ void Filters::ReversFilter(Pixel* image, const size_t image_size_x, const size_t
 void Filters::ThresholdFilter(Pixel* image, const size_t image_size_x, const size_t image_size_y) {
     assert(image != nullptr);
 
-    LogFunctionEntry();
 }
 
 void Filters::GaussianBlur(Pixel* image, const size_t image_size_x, const size_t image_size_y) {
     assert(image != nullptr);
 
-    LogFunctionEntry();
 
     const size_t matrix_dim_x = 3;
     const size_t matrix_dim_y = 3;
