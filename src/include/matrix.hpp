@@ -2,17 +2,150 @@
 #define MATRIX_HPP_
 
 #include <cstddef>
+#include <cstring>
+
+#include "logging.h"
+
+enum class MatrixException {
+    Ok                    = -1,
+    UninitEnum            =  0,
+    InvalidMultiplication =  1,
+};
 
 template <class T>
-class IMat3x3 {
+class Matrix {
   private:
-    static const size_t kMatrixHeight_ = 3;
-    static const size_t kMatrixWidth_  = 3;
-    T mat_memory[kMatrixHeight_ * kMatrixWidth_];
+    size_t dim_x_;
+    size_t dim_y_;
+    T* mat_memory_;
   public:
-    explicit IMat3x3(const T* matrix_array) noexcept;
-    
-    friend IMat3x3<T> operator*(const IMat3x3& matrix_c, const IMat3x3<T>& matrix_b);
+    Matrix(const size_t dim_x, const size_t dim_y, const T* matrix_array);
+    Matrix(const size_t dim_x, const size_t dim_y);
+    ~Matrix() = default;
+
+    size_t GetDimX() const;
+    size_t GetDimY() const;
+
+    const T* GetData() const;
+
+    void SetValues(const T* matrix_values) noexcept; 
+
+    template<class U>
+    friend Matrix<U> operator*(const Matrix<U>& matrix_a, const Matrix<U>& matrix_b);
 };
+
+// static ---------------------------------------------------------------------
+
+template <class T>
+static void MatrixMultiply(T* matrix_c, const T* matrix_a, const T* matrix_b, 
+                           size_t dim_m, size_t dim_n, size_t dim_p);
+
+// global ---------------------------------------------------------------------
+
+template <class T>
+Matrix<T>::Matrix(const size_t dim_x, const size_t dim_y, const T* matrix_array) {
+    assert(matrix_array != nullptr);
+
+    LogFunctionEntry();
+ 
+    mat_memory_ = nullptr;
+    dim_x_ = 0;
+    dim_y_ = 0;   
+
+    mat_memory_ = new T[dim_x * dim_y];
+    dim_x_ = dim_x;
+    dim_y_ = dim_y;
+    memcpy(mat_memory_, matrix_array, dim_x * dim_y * sizeof(T));
+}
+
+template <class T>
+Matrix<T>::Matrix(const size_t dim_x, const size_t dim_y) {
+    LogFunctionEntry();
+
+    mat_memory_ = nullptr;
+    dim_x_ = 0;
+    dim_y_ = 0;
+
+    mat_memory_ = new T[dim_x * dim_y];
+    dim_x_ = dim_x;
+    dim_y_ = dim_y;
+    memset(mat_memory_, 0, dim_x * dim_y * sizeof(T));
+}
+
+template<class T>
+size_t Matrix<T>::GetDimX() const {
+    return dim_x_;
+}
+
+template<class T>
+size_t Matrix<T>::GetDimY() const {
+    return dim_y_;
+}
+
+template<class T>
+const T* Matrix<T>::GetData() const {
+    return mat_memory_;
+}
+
+template<class T>
+void Matrix<T>::SetValues(const T* matrix_values) noexcept {
+    memcpy(mat_memory_, matrix_values, dim_x_ * dim_y_ * sizeof(T));
+}
+
+template <class T>
+Matrix<T> operator*(const Matrix<T>& matrix_a, const Matrix<T>& matrix_b) {
+    LogFunctionEntry();
+
+    if (matrix_a.dim_x_ != matrix_b.dim_y_) { 
+        Log("invalid matrix sizes for multiplication"); 
+        throw MatrixException::InvalidMultiplication;
+    }
+
+    Matrix<T> matrix_c = Matrix<T>(matrix_b.dim_x_, matrix_a.dim_y_);
+    MatrixMultiply<T>(matrix_c.mat_memory_, 
+                      matrix_a.mat_memory_, 
+                      matrix_b.mat_memory_, 
+                      matrix_a.dim_y_, 
+                      matrix_a.dim_x_, 
+                      matrix_b.dim_x_);
+
+    return matrix_c;
+}
+
+// static ---------------------------------------------------------------------
+
+//    n            p         p
+// m      *   n        = m 
+// 
+
+template <class T>
+static void MatrixMultiply(T* matrix_c, const T* matrix_a, const T* matrix_b, 
+                           size_t dim_m, size_t dim_n, size_t dim_p) 
+{
+    assert(matrix_c != nullptr);
+    assert(matrix_a != nullptr);
+    assert(matrix_b != nullptr);
+
+    LogFunctionEntry();
+    LogVariable("%p", matrix_c);
+    LogVariable("%p", matrix_a);
+    LogVariable("%p", matrix_b);
+
+    LogVariable("%lu", dim_m);
+    LogVariable("%lu", dim_n);
+    LogVariable("%lu", dim_p);
+
+    for (size_t i = 0; i < dim_m; i++) {
+        for (size_t j = 0; j < dim_p; j++) {
+            // inner loop
+            // matrix_c[i * dim_p + j] = 0;  
+            std::memset(&matrix_c[i * dim_p + j], 0, sizeof(T));
+            for (size_t index_sum = 0; index_sum < dim_n; index_sum++) {
+                matrix_c[i * dim_p + j] += matrix_a[i * dim_n + index_sum] 
+                                           * matrix_b[index_sum * dim_p + j];
+            } 
+        }
+    }
+}
 
 #endif // MATRIX_HPP_
