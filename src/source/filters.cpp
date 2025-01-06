@@ -1,23 +1,20 @@
 #include "filters.hpp"
 
-#include <cstdint>
 #include <cstddef>
-#include <cassert>
 #include <climits>
 #include <cstring>
 
-#include "spdlog/common.h"
 #include "spdlog/spdlog.h"
-#include "spdlog/sinks/basic_file_sink.h"
 
 #include "matrix.hpp"
+#include "fcy_assert.hpp"
 
 // static -----------------------------------------------------------------------------------------
 
 // Filters ----------------------------------------------------------------------------------------
 
 void Filters::ReversFilter(Pixel* image, const size_t image_size_x, const size_t image_size_y) {
-    assert(image != nullptr);
+    fcy_assert(image != nullptr);
  
     for (Pixel* iter_pixels = image; iter_pixels < image + image_size_x * image_size_y; iter_pixels++) {
         // iter_pixels->red = UCHAR_MAX - iter_pixels->red;
@@ -30,12 +27,12 @@ void Filters::ReversFilter(Pixel* image, const size_t image_size_x, const size_t
 }
 
 void Filters::ThresholdFilter(Pixel* image, const size_t image_size_x, const size_t image_size_y) {
-    assert(image != nullptr);
+    fcy_assert(image != nullptr);
 
 }
 
 void Filters::GaussianBlur(Pixel* image, const size_t image_size_x, const size_t image_size_y) {
-    assert(image != nullptr);
+    fcy_assert(image != nullptr);
 
 
     const size_t matrix_dim_x = 3;

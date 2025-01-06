@@ -1,16 +1,13 @@
 #include "fancy_things.hpp"
 
-#include <cassert>
-
 #include <SFML/Graphics.hpp>
 #include <SFML/Window/Keyboard.hpp>
 
-#include "spdlog/common.h"
 #include "spdlog/spdlog.h"
-#include "spdlog/sinks/basic_file_sink.h"
 
 #include "filters.hpp"
 #include "to_str.hpp"
+#include "fcy_assert.hpp"
 
 // static ----------------------------------------------------------------------
 
@@ -27,9 +24,9 @@ static void CheckEvents(sf::RenderWindow* window,
 void FancyThings::MainLoop(sf::RenderWindow* window, 
                            sf::Image* image, 
                            FancyThings::RenderState* render_state) {
-    assert(window != nullptr);
-    assert(image != nullptr);
-    assert(render_state != nullptr);
+    fcy_assert(window != nullptr);
+    fcy_assert(image != nullptr);
+    fcy_assert(render_state != nullptr);
                             
     sf::Texture image_texture;
     image_texture.loadFromImage(*image);
@@ -40,7 +37,7 @@ void FancyThings::MainLoop(sf::RenderWindow* window,
     RenderLoop(window, render_state, image_sprite);
 
     sf::Vector2u image_size = image->getSize();
-    spdlog::debug("%s: %u, %s: %u\n", TO_STR(image_size.x), image_size.x, TO_STR(image_size.y), image_size.y);
+    spdlog::debug("{}: {}, {}: {}", TO_STR(image_size.x), image_size.x, TO_STR(image_size.y), image_size.y);
 
     const size_t raw_image_size = static_cast<size_t>(image_size.x * image_size.y) * kRGBAPixelSize;
     sf::Uint8* raw_image = new sf::Uint8[raw_image_size];
@@ -66,8 +63,8 @@ void FancyThings::MainLoop(sf::RenderWindow* window,
 static void RenderLoop(sf::RenderWindow* window, 
                        FancyThings::RenderState* render_state, 
                        const sf::Sprite& image_sprite) {
-    assert(window != nullptr);
-    assert(render_state != nullptr);
+    fcy_assert(window != nullptr);
+    fcy_assert(render_state != nullptr);
     
     while (window->isOpen() && !render_state->use_algo) {
         CheckEvents(window, render_state);
@@ -81,8 +78,8 @@ static void RenderLoop(sf::RenderWindow* window,
 
 static void CheckEvents(sf::RenderWindow* window, 
                         FancyThings::RenderState* render_state) {
-    assert(window != nullptr);
-    assert(render_state != nullptr);
+    fcy_assert(window != nullptr);
+    fcy_assert(render_state != nullptr);
 
     sf::Event event;
     while (window->pollEvent(event)) {

@@ -1,6 +1,6 @@
 #include <cstdlib>
 #include <iostream>
-#include <cassert>
+#include <string>
 
 #include <SFML/Graphics.hpp>
 
@@ -9,9 +9,11 @@
 #include "spdlog/sinks/basic_file_sink.h"
 
 #include "fancy_things.hpp"
+#include "fcy_assert.hpp"
 
 int main(const int argc, const char* argv[]) {
     auto logger = spdlog::basic_logger_mt("fancy_things", "fancy_things.log", true);
+    // spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%l] [%@] %v"); // NOTE update to v2.x spdlog
     spdlog::set_default_logger(logger);
 
 #if defined (NDEBUG)
@@ -21,17 +23,23 @@ int main(const int argc, const char* argv[]) {
     spdlog::set_level(spdlog::level::debug);
 #endif // NDEBUG
 
+    for (int i = 0; i < argc; i++) {
+        spdlog::info("argv[{}]: {}", i, argv[i]);
+    }
+
     if (argc < 2) {
-        spdlog::error("0 files had been passed\n");
+        spdlog::error("0 files had been passed");
         std::cerr << "0 files had been passed" << std::endl;
         return EXIT_FAILURE;
     }
 
+    fcy_assert(false);
+
     sf::Image image;
     bool is_load_successful = image.loadFromFile(std::string(argv[1]));
     if (!is_load_successful) {
-        spdlog::error("file load wherent successful\n");
-        std::cerr << "file load wherent successful" << std::endl;
+        spdlog::error("Cant load image({})", argv[1]);
+        std::cerr << "Cant load image(" << std::string(argv[1]) << ")" << std::endl;
         return EXIT_FAILURE;
     }
 
@@ -41,7 +49,9 @@ int main(const int argc, const char* argv[]) {
                                           image_size.y), 
                             FancyThings::WindowName);
 
-    FancyThings::RenderState render_state = {.use_algo = false};
+    FancyThings::RenderState render_state = {
+        .use_algo = false
+    };
 
     while (window.isOpen()) {
         FancyThings::MainLoop(&window, &image, &render_state);
