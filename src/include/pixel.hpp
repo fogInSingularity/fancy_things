@@ -3,6 +3,8 @@
 
 #include <cstdint>
 
+namespace fcy {
+
 class Pixel {
   private:
     union {
@@ -22,18 +24,11 @@ class Pixel {
         uint8_t w_;
     };
   public:
-    Pixel(uint8_t red, uint8_t green, uint8_t blue, uint8_t alpha) noexcept {
+    Pixel(uint8_t red = 0, uint8_t green = 0, uint8_t blue = 0, uint8_t alpha = 0) noexcept {
         red_ = red;
         green_ = green;
         blue_ = blue;
         alpha_ = alpha;
-    }
-
-    Pixel() noexcept {
-        red_   = 0;
-        green_ = 0; 
-        blue_  = 0;
-        alpha_ = 0;
     }
         
     void SetRedColor(uint8_t red)     noexcept { red_ = red; }
@@ -75,8 +70,18 @@ class Pixel {
 
 };
 
+inline Pixel operator+(Pixel pixel_a, Pixel pixel_b) noexcept {
+    return pixel_a += pixel_b;
+}
+
+inline Pixel operator*(Pixel pixel, uint8_t scalar) noexcept {
+    return pixel *= scalar;
+}
+
 inline Pixel operator*(Pixel pixel_a, Pixel pixel_b) noexcept {
     return pixel_a *= pixel_b;
 }
+
+} // namespace fcy
 
 #endif // PIXEL_HPP_

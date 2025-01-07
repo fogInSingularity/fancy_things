@@ -15,7 +15,7 @@
 #include "spdlog/spdlog.h"
 
 #if defined (NDEBUG)
-#define (void)0
+#define fcy_assert(...) (void)0
 #else // NDEBUG
 #define fcy_assert(...) fcy_assert_(__VA_ARGS__, #__VA_ARGS__, __FILE__, __LINE__, __func__)
 #endif // NDEBUG
@@ -44,7 +44,7 @@ inline void fcy_assert_(bool expr, const char* expr_str, const char* src_file, i
     trace_resolver.load_stacktrace(stack_trace);
 
     spdlog::critical("stack trace:");
-    for (int i = 2; i < stack_trace.size(); i++) {
+    for (size_t i = 2; i < stack_trace.size(); i++) {
         backward::ResolvedTrace trace = trace_resolver.resolve(stack_trace[i]);
         spdlog::critical("# {}: \n\t{}:{}\n\t{}", 
                          i-2, trace.source.filename, trace.source.line, trace.source.function);

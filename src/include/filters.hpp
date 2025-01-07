@@ -5,10 +5,32 @@
 
 #include "pixel.hpp"
 
-namespace Filters { 
-    void ReversFilter(Pixel* image, const size_t image_size_x, const size_t image_size_y);
-    void ThresholdFilter(Pixel* image, const size_t image_size_x, const size_t image_size_y);
-    void GaussianBlur(Pixel* image, const size_t image_size_x, const size_t image_size_y);
-} // namespace Filters
+namespace fcy { 
+
+class IFilter {
+  public:
+    virtual ~IFilter() {};
+    virtual void operator()(Pixel* pixel_buf, size_t width, size_t height) = 0;
+};
+
+class ReverseFilter : public IFilter {
+  public:
+    ~ReverseFilter() override {};
+    void operator()(Pixel* pixel_buf, size_t width, size_t height) override;
+};
+
+class GaussianBlurFilter : public IFilter {
+  public:
+    ~GaussianBlurFilter() override {};
+    void operator()(Pixel* pixel_buf, size_t width, size_t height) override;
+};
+
+class ThresholdFilter : public IFilter {
+  public:
+    ~ThresholdFilter() override {};
+    void operator()(Pixel* pixel_buf, size_t width, size_t height) override;
+};
+
+} // namespace fcy
 
 #endif // FILTERS_HPP_

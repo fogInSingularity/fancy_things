@@ -10,6 +10,7 @@
 
 #include "fancy_things.hpp"
 #include "fcy_assert.hpp"
+#include "raw_image.hpp"
 
 int main(const int argc, const char* argv[]) {
     auto logger = spdlog::basic_logger_mt("fancy_things", "fancy_things.log", true);
@@ -20,9 +21,10 @@ int main(const int argc, const char* argv[]) {
     spdlog::set_level(spdlog::level::info);
 #else // NDEBUG
     spdlog::flush_on(spdlog::level::trace);
-    spdlog::set_level(spdlog::level::debug);
+    spdlog::set_level(spdlog::level::trace);
 #endif // NDEBUG
-
+    
+    // log argv
     for (int i = 0; i < argc; i++) {
         spdlog::info("argv[{}]: {}", i, argv[i]);
     }
@@ -45,14 +47,14 @@ int main(const int argc, const char* argv[]) {
 
     sf::RenderWindow window(sf::VideoMode(image_size.x, 
                                           image_size.y), 
-                            FancyThings::WindowName);
+                            fcy::WindowName);
 
-    FancyThings::RenderState render_state = {
+    fcy::RenderState render_state = {
         .use_algo = false
     };
 
     while (window.isOpen()) {
-        FancyThings::MainLoop(&window, &image, &render_state);
+        fcy::MainLoop(&window, &image, &render_state);
     }
 
     return EXIT_SUCCESS;

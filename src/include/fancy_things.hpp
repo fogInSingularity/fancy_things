@@ -4,18 +4,20 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
 
-namespace FancyThings {
-    static const char* WindowName = "fancy thigs";
-    static const unsigned int WindowWidth  = 1920;
-    static const unsigned int WindowHeight = 1080; 
+namespace fcy {
 
-    struct RenderState {
-        bool use_algo;
-    };
+inline const char* WindowName = "fancy thigs";
+inline const unsigned int WindowWidth  = 1920;
+inline const unsigned int WindowHeight = 1080; 
 
-    void MainLoop(sf::RenderWindow* window, 
-                  sf::Image* image, 
-                  FancyThings::RenderState* render_state);
-} // namespace FancyThings 
+struct RenderState {
+    bool use_algo;
+};
+
+void MainLoop(sf::RenderWindow* window, 
+              sf::Image* image, 
+              fcy::RenderState* render_state);
+
+} // namespace fcy
 
 #endif // FANCY_THINGS_HPP_

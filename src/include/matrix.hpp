@@ -4,135 +4,130 @@
 #include <cstddef>
 #include <cstring>
 
-#include "spdlog/common.h"
 #include "spdlog/spdlog.h"
-#include "spdlog/sinks/basic_file_sink.h"
+
+namespace fcy {
 
 enum class MatrixException {
-    Ok                    = -1,
-    UninitEnum            =  0,
-    InvalidMultiplication =  1,
+    Ok                    = 0,
+    UninitEnum            = 1,
+    InvalidMultiplication = 2,
+    OutOfRange            = 3,
 };
 
-template <class T>
+template <typename T>
 class Matrix {
   private:
     size_t dim_x_;
     size_t dim_y_;
     T* mat_memory_;
   public:
-    Matrix(const size_t dim_x, const size_t dim_y, const T* matrix_array);
-    Matrix(const size_t dim_x, const size_t dim_y);
-    ~Matrix() = default;
+    Matrix(const size_t dim_x, const size_t dim_y, const T* matrix_array = nullptr);
+    
+    Matrix(const Matrix& mat) 
+        : dim_x_{mat.dim_x_}, 
+          dim_y_{mat.dim_y_},
+          mat_memory_{new T[mat.dim_x_ * mat.dim_y_]}
+    {
+        // spdlog::trace("matrix copy constructor");
+        std::copy(mat.mat_memory_, mat.mat_memory_ + mat.dim_x_ * mat.dim_y_, mat_memory_);
+    }
 
-    size_t GetDimX() const;
-    size_t GetDimY() const;
+    Matrix& operator=(const Matrix& mat) {
+        // spdlog::trace("matrix copy assignment");
+        if (this == &mat) {
+            return *this;
+        }
 
-    const T* GetData() const;
+        delete[] mat_memory_;
+        size_t size = mat.dim_x_ * mat.dim_y_;
+        mat_memory_ = new T[size];
+        std::copy(mat.mat_memory_, mat.mat_memory_ + size, mat_memory_);
 
-    void SetValues(const T* matrix_values) noexcept; 
+        return *this;
+    }
 
-    template<class U>
-    friend Matrix<U> operator*(const Matrix<U>& matrix_a, const Matrix<U>& matrix_b);
+    ~Matrix() {
+        delete[] mat_memory_;
+    }
+    
+
+    size_t GetDimX() const { return dim_x_; };
+    size_t GetDimY() const { return dim_y_; };
+
+    // const T* GetData() const {return mat_memory_; }; // NOTE should i do this?
+    T GetElem(size_t index_i, size_t index_j) const { 
+        if ((index_i > dim_x_) || (index_j > dim_y_)) {
+            spdlog::error("matrix get elem out of rang: i:{}, j:{}, dim x:{}, dim y:{}", index_i, index_j, dim_x_, dim_y_);
+            throw MatrixException::OutOfRange;
+        }
+
+        return mat_memory_[index_j * dim_x_ + index_i];
+    }
+
+    void SetElem(size_t index_i, size_t index_j, T elem) {
+        if ((index_i > dim_x_) || (index_j > dim_y_)) {
+            spdlog::error("matrix set elem out of range: i:{}, j:{}, dim x:{}, dim y:{}", index_i, index_j, dim_x_, dim_y_);
+            throw MatrixException::OutOfRange;
+        }
+
+        mat_memory_[index_j * dim_x_ + index_i] = elem;
+    }
 };
 
-// static ---------------------------------------------------------------------
+template<typename T>
+Matrix<T> operator*(const Matrix<T>& matrix_a, const Matrix<T>& matrix_b);
 
-template <class T>
-static void MatrixMultiply(T* matrix_c, const T* matrix_a, const T* matrix_b, 
-                           size_t dim_m, size_t dim_n, size_t dim_p);
-
-// global ---------------------------------------------------------------------
-
-template <class T>
+template <typename T>
 Matrix<T>::Matrix(const size_t dim_x, const size_t dim_y, const T* matrix_array) {
-    assert(matrix_array != nullptr);
+    // spdlog::trace("Matrix constructor call: {:p} {}x{}", reinterpret_cast<const void*>(matrix_array), dim_x, dim_y);
 
     mat_memory_ = nullptr;
     dim_x_ = 0;
     dim_y_ = 0;   
 
-    mat_memory_ = new T[dim_x * dim_y];
+    mat_memory_ = new T[dim_x * dim_y]{};
     dim_x_ = dim_x;
     dim_y_ = dim_y;
-    memcpy(mat_memory_, matrix_array, dim_x * dim_y * sizeof(T));
-}
 
-template <class T>
-Matrix<T>::Matrix(const size_t dim_x, const size_t dim_y) {
-    mat_memory_ = nullptr;
-    dim_x_ = 0;
-    dim_y_ = 0;
-
-    mat_memory_ = new T[dim_x * dim_y];
-    dim_x_ = dim_x;
-    dim_y_ = dim_y;
-    memset(mat_memory_, 0, dim_x * dim_y * sizeof(T));
-}
-
-template<class T>
-size_t Matrix<T>::GetDimX() const {
-    return dim_x_;
-}
-
-template<class T>
-size_t Matrix<T>::GetDimY() const {
-    return dim_y_;
-}
-
-template<class T>
-const T* Matrix<T>::GetData() const {
-    return mat_memory_;
-}
-
-template<class T>
-void Matrix<T>::SetValues(const T* matrix_values) noexcept {
-    memcpy(mat_memory_, matrix_values, dim_x_ * dim_y_ * sizeof(T));
-}
-
-template <class T>
-Matrix<T> operator*(const Matrix<T>& matrix_a, const Matrix<T>& matrix_b) {
-    if (matrix_a.dim_x_ != matrix_b.dim_y_) { 
-        spdlog::error("invalid matrix sizes for multiplication"); 
-        throw MatrixException::InvalidMultiplication;
+    size_t size = dim_x * dim_y;
+    if (matrix_array != nullptr) {
+        // memcpy(mat_memory_, matrix_array, dim_x * dim_y * sizeof(T));
+        std::copy(matrix_array, matrix_array + size, mat_memory_);
     }
-
-    Matrix<T> matrix_c = Matrix<T>(matrix_b.dim_x_, matrix_a.dim_y_);
-    MatrixMultiply<T>(matrix_c.mat_memory_, 
-                      matrix_a.mat_memory_, 
-                      matrix_b.mat_memory_, 
-                      matrix_a.dim_y_, 
-                      matrix_a.dim_x_, 
-                      matrix_b.dim_x_);
-
-    return matrix_c;
 }
-
-// static ---------------------------------------------------------------------
 
 //    n            p         p
 // m      *   n        = m 
 // 
+template <typename T>
+Matrix<T> operator*(const Matrix<T>& matrix_a, const Matrix<T>& matrix_b) {
+    if (matrix_a.GetDimX() != matrix_b.GetDimY()) { 
+        spdlog::error("invalid matrix sizes for multiplication"); 
+        throw MatrixException::InvalidMultiplication;
+    }
 
-template <class T>
-static void MatrixMultiply(T* matrix_c, const T* matrix_a, const T* matrix_b, 
-                           size_t dim_m, size_t dim_n, size_t dim_p) 
-{
-    assert(matrix_c != nullptr);
-    assert(matrix_a != nullptr);
-    assert(matrix_b != nullptr);
+    Matrix<T> matrix_c = Matrix<T>(matrix_b.GetDimX(), matrix_a.GetDimY());
 
-    for (size_t i = 0; i < dim_m; i++) {
-        for (size_t j = 0; j < dim_p; j++) {
+    size_t dim_n = matrix_a.GetDimX();
+    size_t dim_m = matrix_a.GetDimY();
+    size_t dim_p = matrix_b.GetDimX();
+
+    for (size_t j = 0; j < dim_m; j++) {
+        for (size_t i = 0; i < dim_p; i++) {
             // inner loop
-            // matrix_c[i * dim_p + j] = 0;  
-            std::memset(&matrix_c[i * dim_p + j], 0, sizeof(T));
             for (size_t index_sum = 0; index_sum < dim_n; index_sum++) {
-                matrix_c[i * dim_p + j] += matrix_a[i * dim_n + index_sum] 
-                                           * matrix_b[index_sum * dim_p + j];
-            } 
+                T new_value = matrix_c.GetElem(i, j)
+                              + matrix_a.GetElem(index_sum, j) 
+                                * matrix_b.GetElem(i, index_sum);
+                matrix_c.SetElem(i, j, new_value);
+            }
         }
     }
+
+    return matrix_c;
 }
+
+} // namespace fcy
 
 #endif // MATRIX_HPP_

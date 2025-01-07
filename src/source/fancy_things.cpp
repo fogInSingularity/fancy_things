@@ -8,22 +8,23 @@
 #include "filters.hpp"
 #include "to_str.hpp"
 #include "fcy_assert.hpp"
+#include "raw_image.hpp"
+
+namespace fcy {
 
 // static ----------------------------------------------------------------------
 
-static const size_t kRGBAPixelSize = 4;
-
 static void RenderLoop(sf::RenderWindow* window, 
-                       FancyThings::RenderState* render_state, 
+                       RenderState* render_state, 
                        const sf::Sprite& image_sprite);
 static void CheckEvents(sf::RenderWindow* window, 
-                        FancyThings::RenderState* render_state);
+                        RenderState* render_state);
 
 // global ----------------------------------------------------------------------
 
-void FancyThings::MainLoop(sf::RenderWindow* window, 
-                           sf::Image* image, 
-                           FancyThings::RenderState* render_state) {
+void MainLoop(sf::RenderWindow* window, 
+              sf::Image* image, 
+              RenderState* render_state) {
     fcy_assert(window != nullptr);
     fcy_assert(image != nullptr);
     fcy_assert(render_state != nullptr);
@@ -38,22 +39,18 @@ void FancyThings::MainLoop(sf::RenderWindow* window,
 
     sf::Vector2u image_size = image->getSize();
     spdlog::debug("{}: {}, {}: {}", TO_STR(image_size.x), image_size.x, TO_STR(image_size.y), image_size.y);
+ 
+    RawImage raw_image(image->getPixelsPtr(), image_size.x, image_size.y);
 
-    const size_t raw_image_size = static_cast<size_t>(image_size.x * image_size.y) * kRGBAPixelSize;
-    sf::Uint8* raw_image = new sf::Uint8[raw_image_size];
-    std::copy(image->getPixelsPtr(), 
-              image->getPixelsPtr() + raw_image_size, 
-              raw_image);
-    
     if (render_state->use_algo) {
-        // Filters::GaussianBlur(reinterpret_cast<Pixel*>(raw_image), image_size.x, image_size.y);
-        // Filters::ThresholdFilter(raw_image, raw_image_size);
-        Filters::ReversFilter(reinterpret_cast<Pixel*>(raw_image), image_size.x, image_size.y);
+        // ThresholdFilter(raw_image, raw_image_size);
+        // ReverseFilter rev_filter;
+        GaussianBlurFilter filter;
+        raw_image.Filter(&filter);
         render_state->use_algo = false;
     }
 
-    image->create(image_size.x, image_size.y, raw_image);
-    delete [] raw_image;
+    image->create(image_size.x, image_size.y, raw_image.GetPixelPtr());
 
     window->setSize(image_size);
 }
@@ -61,7 +58,7 @@ void FancyThings::MainLoop(sf::RenderWindow* window,
 // static ----------------------------------------------------------------------
 
 static void RenderLoop(sf::RenderWindow* window, 
-                       FancyThings::RenderState* render_state, 
+                       RenderState* render_state, 
                        const sf::Sprite& image_sprite) {
     fcy_assert(window != nullptr);
     fcy_assert(render_state != nullptr);
@@ -77,7 +74,7 @@ static void RenderLoop(sf::RenderWindow* window,
 }
 
 static void CheckEvents(sf::RenderWindow* window, 
-                        FancyThings::RenderState* render_state) {
+                        RenderState* render_state) {
     fcy_assert(window != nullptr);
     fcy_assert(render_state != nullptr);
 
@@ -95,3 +92,4 @@ static void CheckEvents(sf::RenderWindow* window,
     }
 }
 
+} // namespace fcy
