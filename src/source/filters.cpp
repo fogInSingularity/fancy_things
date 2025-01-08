@@ -20,7 +20,7 @@ static void ThresholdFilter_(Pixel* image, size_t image_size_x, size_t image_siz
 static void BoxBlur_(Pixel* image, size_t image_size_x, size_t image_size_y);
 
 template <typename T, typename U>
-static Matrix<T> Convolution(Matrix<T>* image, Matrix<U>* kernel);
+static Matrix<PixelT<T>> Convolution(Matrix<PixelT<T>>* image, Matrix<U>* kernel);
 
 // Filters ----------------------------------------------------------------------------------------
 
@@ -66,10 +66,10 @@ static void ThresholdFilter_(Pixel* image, const size_t image_size_x, const size
 static void BoxBlur_(Pixel* image, const size_t image_size_x, const size_t image_size_y) {
     fcy_assert(image != nullptr);
 
-    const size_t conv_dim_x = 5;
-    const size_t conv_dim_y = 5;
+    const size_t conv_dim_x = 15;
+    const size_t conv_dim_y = 15;
    
-    Matrix<double> conv_mat(conv_dim_x, conv_dim_y);
+    Matrix<float> conv_mat(conv_dim_x, conv_dim_y);
     for (size_t i = 0; i < conv_dim_x; i++) {
         for (size_t j = 0; j < conv_dim_y; j++) {
             conv_mat.SetElem(i, j, 1.0 / (conv_dim_x * conv_dim_y));
@@ -84,7 +84,7 @@ static void BoxBlur_(Pixel* image, const size_t image_size_x, const size_t image
 }
 
 template <typename T, typename U>
-static Matrix<T> Convolution(Matrix<T>* image, Matrix<U>* kernel) {
+static Matrix<PixelT<T>> Convolution(Matrix<PixelT<T>>* image, Matrix<U>* kernel) {
     fcy_assert(image != nullptr);
     fcy_assert(kernel != nullptr);
 
@@ -94,23 +94,24 @@ static Matrix<T> Convolution(Matrix<T>* image, Matrix<U>* kernel) {
     int64_t kdim_x = kernel->GetDimX();
     int64_t kdim_y = kernel->GetDimY();
 
-    Matrix<T> res_mat(idim_x, idim_y);
+    Matrix<PixelT<T>> res_mat(idim_x, idim_y);
 
     for (int64_t i = 0; i < idim_x; ++i) {
         for (int64_t j = 0; j < idim_y; ++j) {
-            T sum;
+            // T sum;
+            PixelT<U> sum;
             for (int64_t k = 0; k < kdim_x; ++k) {
                 for (int64_t l = 0; l < kdim_y; ++l) {
                     int64_t current_dim_x = i + k - (kdim_x / 2);
                     int64_t current_dim_y = j + l - (kdim_y / 2);
 
                     if (current_dim_y >= 0 && current_dim_y < idim_y && current_dim_x >= 0 && current_dim_x < idim_x) {
-                        sum += image->GetElem(current_dim_x, current_dim_y) * kernel->GetElem(k, l);
+                        sum += PixelT<U>{image->GetElem(current_dim_x, current_dim_y)} * kernel->GetElem(k, l);
                     }
                 }
             }
 
-            res_mat.SetElem(i, j, sum);
+            res_mat.SetElem(i, j, PixelT<T>{sum});
         }
     }
 

@@ -11,8 +11,13 @@
 #include "fancy_things.hpp"
 
 int main(const int argc, const char* argv[]) {
+    // use when spdlog v2
+    // auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("fancy_things.log", true);
+    // auto logger = std::make_shared<spdlog::logger>("fancy_things", file_sink);
+    // spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%l] [%@] %v");
+    // spdlog::set_global_logger(logger);
+
     auto logger = spdlog::basic_logger_mt("fancy_things", "fancy_things.log", true);
-    // spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%l] [%@] %v"); // NOTE update to v2.x spdlog
     spdlog::set_default_logger(logger);
 
 #if defined (NDEBUG)

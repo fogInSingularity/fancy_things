@@ -5,43 +5,37 @@
 
 namespace fcy {
 
-class Pixel {
-  private:
-    union {
-        uint8_t red_;
-        uint8_t x_;
-    };
-    union {
-        uint8_t green_;
-        uint8_t y_;
-    };
-    union {
-        uint8_t blue_;
-        uint8_t z_;
-    };
-    union {
-        uint8_t alpha_;
-        uint8_t w_;
-    };
+template <typename T>
+class PixelT {
+  // private:
+  public: // public becase it doenst have any invariants
+    T red_;
+    T green_;
+    T blue_;
+    T alpha_;
   public:
-    explicit Pixel(uint8_t red = 0, uint8_t green = 0, uint8_t blue = 0, uint8_t alpha = 0) noexcept {
-        red_ = red;
-        green_ = green;
-        blue_ = blue;
-        alpha_ = alpha;
+    explicit PixelT(T red = 0, T green = 0, T blue = 0, T alpha = 0) noexcept 
+        : red_{red}, green_{green}, blue_{blue}, alpha_{alpha} {}
+ 
+    template <typename U>
+    explicit PixelT(const PixelT<U>& pixel) noexcept {
+        red_   = static_cast<T>(pixel.red_);
+        green_ = static_cast<T>(pixel.green_);
+        blue_  = static_cast<T>(pixel.blue_);
+        alpha_ = static_cast<T>(pixel.alpha_);
     }
-        
-    void SetRedColor(uint8_t red)     noexcept { red_ = red; }
-    void SetGreenColor(uint8_t green) noexcept { green_ = green; }
-    void SetBlueColor(uint8_t blue)   noexcept { blue_ = blue; }
-    void SetAlphaColor(uint8_t alpha) noexcept { alpha_ = alpha; }
 
-    uint8_t GetRedColor()   const noexcept { return red_; }
-    uint8_t GetGreenColor() const noexcept { return green_; }
-    uint8_t GetBlueColor()  const noexcept { return blue_; }
-    uint8_t GetAlphaColor() const noexcept { return alpha_; }
+    void SetRedColor(T red)     noexcept { red_ = red; }
+    void SetGreenColor(T green) noexcept { green_ = green; }
+    void SetBlueColor(T blue)   noexcept { blue_ = blue; }
+    void SetAlphaColor(T alpha) noexcept { alpha_ = alpha; }
 
-    Pixel& operator+=(Pixel pixel) noexcept {
+    T GetRedColor()   const noexcept { return red_; }
+    T GetGreenColor() const noexcept { return green_; }
+    T GetBlueColor()  const noexcept { return blue_; }
+    T GetAlphaColor() const noexcept { return alpha_; }
+
+    PixelT& operator+=(PixelT pixel) noexcept {
         red_   += pixel.red_; 
         green_ += pixel.green_;
         blue_  += pixel.blue_;
@@ -50,17 +44,26 @@ class Pixel {
         return *this;
     }
 
-    template <typename T>
-    Pixel& operator*=(T scalar) noexcept {
-        red_   = static_cast<uint8_t>(static_cast<T>(red_)   * scalar);
-        green_ = static_cast<uint8_t>(static_cast<T>(green_) * scalar); 
-        blue_  = static_cast<uint8_t>(static_cast<T>(blue_)  * scalar); 
-        // alpha_ *= scalar; // alpha stays the same
+    template <typename U>
+    PixelT& operator*=(U scalar) noexcept {
+        red_   = static_cast<T>(static_cast<U>(red_)   * scalar);
+        green_ = static_cast<T>(static_cast<U>(green_) * scalar); 
+        blue_  = static_cast<T>(static_cast<U>(blue_)  * scalar); 
+        alpha_ = static_cast<T>(static_cast<U>(alpha_) * scalar); // alpha stays the same
 
         return *this;       
     }
 
-    Pixel& operator*=(Pixel pixel) noexcept {
+    PixelT& operator*=(T scalar) noexcept {
+        red_   *= scalar;
+        green_ *= scalar; 
+        blue_  *= scalar; 
+        alpha_ *= scalar; // alpha stays the same
+
+        return *this;       
+    }
+
+    PixelT& operator*=(PixelT pixel) noexcept {
         red_   *= pixel.red_; 
         green_ *= pixel.green_;
         blue_  *= pixel.blue_;
@@ -70,18 +73,27 @@ class Pixel {
     }
 };
 
-inline Pixel operator+(Pixel pixel_a, Pixel pixel_b) noexcept {
+template <typename T>
+inline PixelT<T> operator+(PixelT<T> pixel_a, PixelT<T> pixel_b) noexcept {
     return pixel_a += pixel_b;
 }
 
-template <typename T>
-inline Pixel operator*(Pixel pixel, T scalar) noexcept {
+template <typename T, typename U>
+inline PixelT<T> operator*(PixelT<T> pixel, U scalar) noexcept {
     return pixel *= scalar;
 }
 
-inline Pixel operator*(Pixel pixel_a, Pixel pixel_b) noexcept {
+template <typename T>
+inline PixelT<T> operator*(PixelT<T> pixel, T scalar) noexcept {
+    return pixel *= scalar;
+}
+
+template <typename T>
+inline PixelT<T> operator*(PixelT<T> pixel_a, PixelT<T> pixel_b) noexcept {
     return pixel_a *= pixel_b;
 }
+
+using Pixel = PixelT<uint8_t>;
 
 } // namespace fcy
 
