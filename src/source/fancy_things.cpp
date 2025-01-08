@@ -1,5 +1,10 @@
 #include "fancy_things.hpp"
 
+#include <string>
+#include <sstream>
+#include <chrono>
+#include <iomanip>
+
 #include <SFML/Graphics.hpp>
 #include <SFML/Window/Keyboard.hpp>
 
@@ -19,6 +24,8 @@ static void RenderLoop(sf::RenderWindow* window,
                        const sf::Sprite& image_sprite);
 static void CheckEvents(sf::RenderWindow* window, 
                         RenderState* render_state);
+
+static std::string GenerateUniqueFileName(const std::string& file_prefix, const std::string& file_extension);
 
 // global ----------------------------------------------------------------------
 
@@ -47,7 +54,18 @@ void MainLoop(sf::RenderWindow* window,
         // ReverseFilter filter;
         BoxBlurFilter filter;
         raw_image.Filter(&filter);
+
         render_state->use_algo = false;
+    }
+
+    if (render_state->save_image) {
+        sf::Image image_to_save;
+        image_to_save.create(raw_image.GetWidth(), raw_image.GetHeight(), raw_image.GetPixelPtr());
+
+        std::string unique_file_name = GenerateUniqueFileName("image", "png");
+        image_to_save.saveToFile(unique_file_name);
+
+        render_state->save_image = false;
     }
 
     image->create(image_size.x, image_size.y, raw_image.GetPixelPtr());
@@ -80,15 +98,32 @@ static void CheckEvents(sf::RenderWindow* window,
     sf::Event event;
     while (window->pollEvent(event)) {
         if (event.type == sf::Event::Closed) {
+            spdlog::debug("button close pressed");
             window->close();
         } else if (event.type == sf::Event::KeyPressed) {
+            spdlog::debug("key pressed");
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q)) {
+                spdlog::trace("pressed Q");
                 window->close();      
-            } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
+            } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
+                spdlog::trace("pressed A");
                 render_state->use_algo = true;
+            } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
+                spdlog::trace("pressed S");
+                render_state->save_image = true;
             }
         }
     }
+}
+
+static std::string GenerateUniqueFileName(const std::string& file_prefix, const std::string& file_extension) {
+    auto now = std::chrono::system_clock::now();
+    auto in_time_t = std::chrono::system_clock::to_time_t(now);
+
+    std::stringstream unique_name_time;
+    unique_name_time << std::put_time(std::localtime(&in_time_t), "%Y-%m-%d_%H-%M-%S"); // Format time
+
+    return file_prefix + "_" + unique_name_time.str() + "." + file_extension;
 }
 
 } // namespace fcy

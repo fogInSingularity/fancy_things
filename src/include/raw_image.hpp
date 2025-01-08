@@ -40,6 +40,9 @@ class RawImage {
         return  reinterpret_cast<const uint8_t*>(pixel_buf_);
     }
 
+    size_t GetWidth()  const { return width_; }
+    size_t GetHeight() const { return height_; }
+
     void Filter(IFilter* filter) {
         (*filter)(pixel_buf_, width_, height_);
     }

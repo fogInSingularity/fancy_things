@@ -48,7 +48,8 @@ int main(const int argc, const char* argv[]) {
                             fcy::WindowName);
 
     fcy::RenderState render_state = {
-        .use_algo = false
+        .use_algo = false,
+        .save_image = false,
     };
 
     while (window.isOpen()) {

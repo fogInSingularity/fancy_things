@@ -12,6 +12,7 @@ inline const unsigned int WindowHeight = 1080;
 
 struct RenderState {
     bool use_algo;
+    bool save_image;
 };
 
 void MainLoop(sf::RenderWindow* window, 
