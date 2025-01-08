@@ -29,12 +29,12 @@ class Matrix {
           dim_y_{mat.dim_y_},
           mat_memory_{new T[mat.dim_x_ * mat.dim_y_]}
     {
-        // spdlog::trace("matrix copy constructor");
+        spdlog::trace("matrix copy constructor");
         std::copy(mat.mat_memory_, mat.mat_memory_ + mat.dim_x_ * mat.dim_y_, mat_memory_);
     }
 
     Matrix& operator=(const Matrix& mat) {
-        // spdlog::trace("matrix copy assignment");
+        spdlog::trace("matrix copy assignment");
         if (this == &mat) {
             return *this;
         }
@@ -73,6 +73,14 @@ class Matrix {
 
         mat_memory_[index_j * dim_x_ + index_i] = elem;
     }
+
+    void SetElemsFromMem(const T* mem) {
+        std::copy(mem, mem + dim_x_ * dim_y_, mat_memory_);
+    }
+
+    void GetElemsToMem(T* mem) const {
+        std::copy(mat_memory_, mat_memory_ + dim_x_ * dim_y_, mem);
+    }
 };
 
 template<typename T>
@@ -80,7 +88,7 @@ Matrix<T> operator*(const Matrix<T>& matrix_a, const Matrix<T>& matrix_b);
 
 template <typename T>
 Matrix<T>::Matrix(const size_t dim_x, const size_t dim_y, const T* matrix_array) {
-    // spdlog::trace("Matrix constructor call: {:p} {}x{}", reinterpret_cast<const void*>(matrix_array), dim_x, dim_y);
+    spdlog::trace("Matrix constructor call: {:p} {}x{}", reinterpret_cast<const void*>(matrix_array), dim_x, dim_y);
 
     mat_memory_ = nullptr;
     dim_x_ = 0;

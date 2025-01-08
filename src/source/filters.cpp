@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <climits>
+#include <cstdint>
 #include <cstring>
 
 #include "spdlog/spdlog.h"
@@ -16,7 +17,10 @@ namespace fcy {
 
 static void ReversFilter_(Pixel* image, size_t image_size_x, size_t image_size_y);
 static void ThresholdFilter_(Pixel* image, size_t image_size_x, size_t image_size_y);
-static void GaussianBlur_(Pixel* image, size_t image_size_x, size_t image_size_y);
+static void BoxBlur_(Pixel* image, size_t image_size_x, size_t image_size_y);
+
+template <typename T, typename U>
+static Matrix<T> Convolution(Matrix<T>* image, Matrix<U>* kernel);
 
 // Filters ----------------------------------------------------------------------------------------
 
@@ -26,10 +30,10 @@ void ReverseFilter::operator()(Pixel* pixel_buf, size_t width, size_t height) {
     ReversFilter_(pixel_buf, width, height);    
 }
 
-void GaussianBlurFilter::operator()(Pixel* pixel_buf, size_t width, size_t height) {
+void BoxBlurFilter::operator()(Pixel* pixel_buf, size_t width, size_t height) {
     fcy_assert(pixel_buf != nullptr);
 
-    GaussianBlur_(pixel_buf, width, height);    
+    BoxBlur_(pixel_buf, width, height);    
 }
 
 void ThresholdFilter::operator()(Pixel* pixel_buf, size_t width, size_t height) {
@@ -44,9 +48,6 @@ static void ReversFilter_(Pixel* image, const size_t image_size_x, const size_t 
     fcy_assert(image != nullptr);
  
     for (Pixel* iter_pixels = image; iter_pixels < image + image_size_x * image_size_y; iter_pixels++) {
-        // iter_pixels->red = UCHAR_MAX - iter_pixels->red;
-        // iter_pixels->green = UCHAR_MAX - iter_pixels->green;
-        // iter_pixels->blue = UCHAR_MAX - iter_pixels->blue;
         iter_pixels->SetRedColor(UCHAR_MAX - iter_pixels->GetRedColor());
         iter_pixels->SetGreenColor(UCHAR_MAX - iter_pixels->GetGreenColor());
         iter_pixels->SetBlueColor(UCHAR_MAX - iter_pixels->GetBlueColor());
@@ -58,49 +59,62 @@ static void ThresholdFilter_(Pixel* image, const size_t image_size_x, const size
     
     (void)image_size_x;
     (void)image_size_y;
+
+    spdlog::error("threshold filter not implemented yet");
 }
 
-static void GaussianBlur_(Pixel* image, const size_t image_size_x, const size_t image_size_y) {
+static void BoxBlur_(Pixel* image, const size_t image_size_x, const size_t image_size_y) {
     fcy_assert(image != nullptr);
 
-    const size_t matrix_dim_x = 3;
-    const size_t matrix_dim_y = 3;
-    
-    Pixel form_matrix[matrix_dim_x * matrix_dim_y] = {};
-
-    Pixel convolution_matrix_mem[matrix_dim_x * matrix_dim_y] = {};
-    for (size_t i = 0; i < matrix_dim_x; i++) {
-        for (size_t j = 0; j < matrix_dim_y; j++) {
-            convolution_matrix_mem[j * matrix_dim_x + i] = Pixel(28, 28, 28, 255);
+    const size_t conv_dim_x = 5;
+    const size_t conv_dim_y = 5;
+   
+    Matrix<double> conv_mat(conv_dim_x, conv_dim_y);
+    for (size_t i = 0; i < conv_dim_x; i++) {
+        for (size_t j = 0; j < conv_dim_y; j++) {
+            conv_mat.SetElem(i, j, 1.0 / (conv_dim_x * conv_dim_y));
         }
     }
 
-    Matrix<Pixel> convolution_matrix(matrix_dim_x, matrix_dim_y, convolution_matrix_mem);
+    Matrix<Pixel> image_mat(image_size_x, image_size_y, image);
 
-    for (size_t j = 0; j < image_size_y - matrix_dim_y + 1; j++) {
-        for (size_t i = 0; i < image_size_x - matrix_dim_x + 1; i++) {
-            memcpy(&form_matrix[0 * matrix_dim_x], image + j * image_size_x + i, sizeof(Pixel) * matrix_dim_x);      
-            memcpy(&form_matrix[1 * matrix_dim_x], image + (j + 1) * image_size_x + i, sizeof(Pixel) * matrix_dim_x);   
-            memcpy(&form_matrix[2 * matrix_dim_x], image + (j + 2) * image_size_x + i, sizeof(Pixel) * matrix_dim_x);     
-            Matrix<Pixel> image_matrix(matrix_dim_x, matrix_dim_y, form_matrix);
+    Matrix<Pixel> blured_image_mat = Convolution(&image_mat, &conv_mat);
 
-            Matrix<Pixel> blur_matrix = convolution_matrix * image_matrix;
+    blured_image_mat.GetElemsToMem(image);
+}
 
-            // FIXME
-            // memcpy(form_matrix, image + (j + 0) * image_size_x + i, sizeof(Pixel) * matrix_dim_x);      
-            // memcpy(form_matrix, image + (j + 1) * image_size_x + i, sizeof(Pixel) * matrix_dim_x);   
-            // memcpy(form_matrix, image + (j + 2) * image_size_x + i, sizeof(Pixel) * matrix_dim_x);
-            for (size_t copy_i = 0; copy_i < matrix_dim_x; copy_i++) {
-                for (size_t copy_j = 0; copy_j < matrix_dim_y; copy_j++ ) {
-                    form_matrix[copy_j * matrix_dim_x + copy_i] = blur_matrix.GetElem(copy_i, copy_j);
+template <typename T, typename U>
+static Matrix<T> Convolution(Matrix<T>* image, Matrix<U>* kernel) {
+    fcy_assert(image != nullptr);
+    fcy_assert(kernel != nullptr);
+
+    int64_t idim_x = image->GetDimX();
+    int64_t idim_y = image->GetDimY();
+
+    int64_t kdim_x = kernel->GetDimX();
+    int64_t kdim_y = kernel->GetDimY();
+
+    Matrix<T> res_mat(idim_x, idim_y);
+
+    for (int64_t i = 0; i < idim_x; ++i) {
+        for (int64_t j = 0; j < idim_y; ++j) {
+            T sum;
+            for (int64_t k = 0; k < kdim_x; ++k) {
+                for (int64_t l = 0; l < kdim_y; ++l) {
+                    int64_t current_dim_x = i + k - (kdim_x / 2);
+                    int64_t current_dim_y = j + l - (kdim_y / 2);
+
+                    if (current_dim_y >= 0 && current_dim_y < idim_y && current_dim_x >= 0 && current_dim_x < idim_x) {
+                        sum += image->GetElem(current_dim_x, current_dim_y) * kernel->GetElem(k, l);
+                    }
                 }
             }
 
-            memcpy(image + (j + 0) * image_size_x + i, &form_matrix[0 * matrix_dim_x], sizeof(Pixel) * matrix_dim_x);      
-            memcpy(image + (j + 1) * image_size_x + i, &form_matrix[1 * matrix_dim_x], sizeof(Pixel) * matrix_dim_x);   
-            memcpy(image + (j + 2) * image_size_x + i, &form_matrix[2 * matrix_dim_x], sizeof(Pixel) * matrix_dim_x);     
+            res_mat.SetElem(i, j, sum);
         }
     }
+
+    return res_mat;
 }
 
 } // namespace fcy

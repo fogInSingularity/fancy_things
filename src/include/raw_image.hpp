@@ -25,8 +25,9 @@ class RawImage {
         spdlog::trace("RawImage constructor call: {:p} {}x{}", reinterpret_cast<const void*>(raw_image_buf), width, height);
 
         pixel_buf_ = new Pixel[width * height];
-        // std::copy(raw_image_buf, raw_image_buf + width * height, pixel_buf_);
-        std::memcpy(pixel_buf_, raw_image_buf, width * height * sizeof(Pixel));
+        const Pixel* image_buf = reinterpret_cast<const Pixel*>(raw_image_buf);
+        std::copy(image_buf, image_buf + width * height, pixel_buf_);
+
         width_ = width;
         height_ = height;
     }

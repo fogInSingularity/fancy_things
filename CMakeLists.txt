@@ -27,7 +27,7 @@ target_include_directories(fancy_things
 
 # set(CMAKE_CXX_COMPILER gcc)
 
-set(ASAN_FLAGS "-fsanitize=address,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,integer-divide-by-zero,leak,nonnull-attribute,null,object-size,return,returns-nonnull-attribute,shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr")
+# set(ASAN_FLAGS "-fsanitize=address,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,integer-divide-by-zero,leak,nonnull-attribute,null,object-size,return,returns-nonnull-attribute,shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -fstack-protector-strong -fcheck-new -fstrict-overflow")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Og -g3 -ggdb ${ASAN_FLAGS}") # -D_FORTIFY_SOURCE=3
@@ -53,6 +53,7 @@ message(STATUS "try to add spdlog:")
 CPMAddPackage(
     NAME spdlog
     GITHUB_REPOSITORY gabime/spdlog
+    # GIT_TAG v2.x
     GIT_TAG v1.15.0
 )
 

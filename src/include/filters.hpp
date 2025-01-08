@@ -19,9 +19,9 @@ class ReverseFilter : public IFilter {
     void operator()(Pixel* pixel_buf, size_t width, size_t height) override;
 };
 
-class GaussianBlurFilter : public IFilter {
+class BoxBlurFilter : public IFilter {
   public:
-    ~GaussianBlurFilter() override {};
+    ~BoxBlurFilter() override {};
     void operator()(Pixel* pixel_buf, size_t width, size_t height) override;
 };
 

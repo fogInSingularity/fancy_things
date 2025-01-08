@@ -1,9 +1,12 @@
 .clang-tidy
 fancy_things.log
 fancy_things
-image.png
 .cache/
 compile_commands.json
 perf.data
 perf.data.old
 build
+dbuild
+rbuild
+*.png
+*jpeg

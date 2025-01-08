@@ -38,14 +38,14 @@ void MainLoop(sf::RenderWindow* window,
     RenderLoop(window, render_state, image_sprite);
 
     sf::Vector2u image_size = image->getSize();
-    spdlog::debug("{}: {}, {}: {}", TO_STR(image_size.x), image_size.x, TO_STR(image_size.y), image_size.y);
+    spdlog::debug("main render loop: {}: {}, {}: {}", TO_STR(image_size.x), image_size.x, TO_STR(image_size.y), image_size.y);
  
     RawImage raw_image(image->getPixelsPtr(), image_size.x, image_size.y);
 
     if (render_state->use_algo) {
-        // ThresholdFilter(raw_image, raw_image_size);
-        // ReverseFilter rev_filter;
-        GaussianBlurFilter filter;
+        // ThresholdFilter filter;
+        // ReverseFilter filter;
+        BoxBlurFilter filter;
         raw_image.Filter(&filter);
         render_state->use_algo = false;
     }
@@ -66,7 +66,6 @@ static void RenderLoop(sf::RenderWindow* window,
     while (window->isOpen() && !render_state->use_algo) {
         CheckEvents(window, render_state);
 
-        // render
         window->clear();
         window->draw(image_sprite);
         window->display();

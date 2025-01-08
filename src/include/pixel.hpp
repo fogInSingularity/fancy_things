@@ -24,7 +24,7 @@ class Pixel {
         uint8_t w_;
     };
   public:
-    Pixel(uint8_t red = 0, uint8_t green = 0, uint8_t blue = 0, uint8_t alpha = 0) noexcept {
+    explicit Pixel(uint8_t red = 0, uint8_t green = 0, uint8_t blue = 0, uint8_t alpha = 0) noexcept {
         red_ = red;
         green_ = green;
         blue_ = blue;
@@ -50,13 +50,14 @@ class Pixel {
         return *this;
     }
 
-    Pixel& operator*=(uint8_t scalar) noexcept {
-        red_   *= scalar; 
-        green_ *= scalar;
-        blue_  *= scalar;
-        alpha_ *= scalar;
+    template <typename T>
+    Pixel& operator*=(T scalar) noexcept {
+        red_   = static_cast<uint8_t>(static_cast<T>(red_)   * scalar);
+        green_ = static_cast<uint8_t>(static_cast<T>(green_) * scalar); 
+        blue_  = static_cast<uint8_t>(static_cast<T>(blue_)  * scalar); 
+        // alpha_ *= scalar; // alpha stays the same
 
-        return *this;
+        return *this;       
     }
 
     Pixel& operator*=(Pixel pixel) noexcept {
@@ -67,14 +68,14 @@ class Pixel {
 
         return *this;
     }
-
 };
 
 inline Pixel operator+(Pixel pixel_a, Pixel pixel_b) noexcept {
     return pixel_a += pixel_b;
 }
 
-inline Pixel operator*(Pixel pixel, uint8_t scalar) noexcept {
+template <typename T>
+inline Pixel operator*(Pixel pixel, T scalar) noexcept {
     return pixel *= scalar;
 }
 

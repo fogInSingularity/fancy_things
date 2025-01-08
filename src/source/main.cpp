@@ -9,8 +9,6 @@
 #include "spdlog/sinks/basic_file_sink.h"
 
 #include "fancy_things.hpp"
-#include "fcy_assert.hpp"
-#include "raw_image.hpp"
 
 int main(const int argc, const char* argv[]) {
     auto logger = spdlog::basic_logger_mt("fancy_things", "fancy_things.log", true);
@@ -21,7 +19,7 @@ int main(const int argc, const char* argv[]) {
     spdlog::set_level(spdlog::level::info);
 #else // NDEBUG
     spdlog::flush_on(spdlog::level::trace);
-    spdlog::set_level(spdlog::level::trace);
+    spdlog::set_level(spdlog::level::debug);
 #endif // NDEBUG
     
     // log argv
