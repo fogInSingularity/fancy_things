@@ -15,7 +15,7 @@ namespace fcy {
 
 class RawImage {
   private:
-    Pixel* pixel_buf_;
+    PixelU* pixel_buf_;
     size_t width_;
     size_t height_;
   public:
@@ -24,8 +24,8 @@ class RawImage {
 
         spdlog::trace("RawImage constructor call: {:p} {}x{}", reinterpret_cast<const void*>(raw_image_buf), width, height);
 
-        pixel_buf_ = new Pixel[width * height];
-        const Pixel* image_buf = reinterpret_cast<const Pixel*>(raw_image_buf);
+        pixel_buf_ = new PixelU[width * height];
+        const PixelU* image_buf = reinterpret_cast<const PixelU*>(raw_image_buf);
         std::copy(image_buf, image_buf + width * height, pixel_buf_);
 
         width_ = width;

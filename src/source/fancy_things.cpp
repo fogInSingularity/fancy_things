@@ -52,7 +52,8 @@ void MainLoop(sf::RenderWindow* window,
     if (render_state->use_algo) {
         // ThresholdFilter filter;
         // ReverseFilter filter;
-        BoxBlurFilter filter;
+        // BoxBlurFilter filter;
+        EdgeDetectorFilter filter;
         raw_image.Filter(&filter);
 
         render_state->use_algo = false;
