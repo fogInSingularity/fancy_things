@@ -77,6 +77,8 @@ class Matrix {
 
     template <typename Func>
     Matrix Apply(Func func);
+
+    void NormalizeTo1();
 };
 
 template<typename T>
@@ -86,7 +88,7 @@ template<typename T>
 Matrix<T> operator+(const Matrix<T>& matrix_a, const Matrix<T>& matrix_b);
 
 template <typename T, typename U>
-Matrix<T> Convolution(const Matrix<T>& image, const Matrix<U>& kernel);
+Matrix<T> Convolution(const Matrix<T>& target, const Matrix<U>& kernel);
 
 // impl
 
@@ -276,6 +278,26 @@ Matrix<T> Convolution(const Matrix<T>& target, const Matrix<U>& kernel) {
     }
 
     return res_mat;
+}
+
+template <typename T>
+void Matrix<T>::NormalizeTo1() {
+    spdlog::trace("Matrix norm to 1:");
+
+    T sum{};
+
+    for (size_t i = 0; i < dim_x_; i++) {
+        for (size_t j = 0; j < dim_y_; j++) {
+            sum += GetElem(i, j);
+        }
+    }
+
+    for (size_t i = 0; i < dim_x_; i++) {
+        for (size_t j = 0; j < dim_y_; j++) {
+            T new_value = GetElem(i, j) / sum;
+            SetElem(i, j, new_value);
+        }
+    }
 }
 
 } // namespace fcy

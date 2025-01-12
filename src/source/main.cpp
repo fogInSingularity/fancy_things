@@ -24,7 +24,7 @@ int main(const int argc, const char* argv[]) {
 #if defined (NDEBUG)
     spdlog::set_level(spdlog::level::info);
 #else // NDEBUG
-    spdlog::flush_on(spdlog::level::trace);
+    // spdlog::flush_on(spdlog::level::trace);
     spdlog::set_level(spdlog::level::debug);
 #endif // NDEBUG
     

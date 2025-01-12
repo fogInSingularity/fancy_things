@@ -53,6 +53,7 @@ void MainLoop(sf::RenderWindow* window,
         // ThresholdFilter filter;
         // ReverseFilter filter;
         // BoxBlurFilter filter;
+        // GaussianBlurFilter filter;
         EdgeDetectorFilter filter;
         raw_image.Filter(&filter);
 

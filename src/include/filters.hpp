@@ -25,6 +25,12 @@ class BoxBlurFilter : public IFilter {
     void operator()(PixelU* pixel_buf, size_t width, size_t height) override;
 };
 
+class GaussianBlurFilter : public IFilter {
+   public:
+    ~GaussianBlurFilter() override {};
+    void operator()(PixelU* pixel_buf, size_t width, size_t height) override; 
+};
+
 class ThresholdFilter : public IFilter {
   public:
     ~ThresholdFilter() override {};
@@ -36,7 +42,6 @@ class EdgeDetectorFilter : public IFilter {
     ~EdgeDetectorFilter() override {};
     void operator()(PixelU* pixel_buf, size_t width, size_t height) override;
 };
-
 
 } // namespace fcy
 
