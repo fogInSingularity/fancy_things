@@ -54,8 +54,8 @@ void BoxBlurFilter::operator()(PixelU* pixel_buf, size_t width, size_t height) {
 
     // https://en.wikipedia.org/wiki/Box_blur
 
-    const size_t ker_dim_x = 3;
-    const size_t ker_dim_y = 3;
+    const size_t ker_dim_x = 5;
+    const size_t ker_dim_y = 5;
 
     Matrix<float> blur_ker(ker_dim_x, ker_dim_y);
     for (size_t i = 0; i < ker_dim_x; i++) {
@@ -84,11 +84,11 @@ void GaussianBlurFilter::operator()(PixelU* pixel_buf, size_t width, size_t heig
 
     // https://en.wikipedia.org/wiki/Gaussian_blur
 
-    const size_t ker_dim_x = 5;
-    const size_t ker_dim_y = 5;
+    const size_t ker_dim_x = 3;
+    const size_t ker_dim_y = 3;
 
     float mean = 0;
-    float stddev = 1;
+    float stddev = 0.5;
 
     Matrix<float> blur_ker(ker_dim_x, ker_dim_y);
     for (size_t i = 0; i < ker_dim_x; i++) {
@@ -117,6 +117,32 @@ void GaussianBlurFilter::operator()(PixelU* pixel_buf, size_t width, size_t heig
     ConvertGrayScaleChanelsMatsToRGSImage(&conv_red_mat, &conv_green_mat, &conv_blue_mat, pixel_buf, width, height);
 }
 
+
+void MotionBlurFilter::operator()(PixelU* pixel_buf, size_t width, size_t height) { 
+    fcy_assert(pixel_buf != nullptr);
+
+    const size_t conv_dim_x = 15;
+    const size_t conv_dim_y = 15;
+
+    Matrix<float> motion_ker(conv_dim_x, conv_dim_y);
+    for (size_t i = 0; i < conv_dim_x; i++) {
+        motion_ker.SetElem(i, i, 1);
+    }
+    motion_ker.NormalizeTo1();
+
+    Matrix<GSPixel<float>> red_ch_mat(width, height);
+    Matrix<GSPixel<float>> green_ch_mat(width, height);
+    Matrix<GSPixel<float>> blue_ch_mat(width, height);
+
+    ConvertRGBImageToGrayScaleChanelsMats(pixel_buf, width, height, &red_ch_mat, &green_ch_mat, &blue_ch_mat);
+
+    auto conv_red_mat   = Convolution(red_ch_mat, motion_ker);
+    auto conv_green_mat = Convolution(green_ch_mat, motion_ker);
+    auto conv_blue_mat  = Convolution(blue_ch_mat, motion_ker);
+
+    ConvertGrayScaleChanelsMatsToRGSImage(&conv_red_mat, &conv_green_mat, &conv_blue_mat, pixel_buf, width, height);
+}
+
 void ThresholdFilter::operator()(PixelU* pixel_buf, size_t width, size_t height) {
     fcy_assert(pixel_buf != nullptr);
 
@@ -126,7 +152,29 @@ void ThresholdFilter::operator()(PixelU* pixel_buf, size_t width, size_t height)
     spdlog::error("threshold filter not implemented yet");
 }
 
-void EdgeDetectorFilter::operator()(PixelU* pixel_buf, size_t width, size_t height) {
+void EmbossingFilter::operator()(PixelU* pixel_buf, size_t width, size_t height) {
+    fcy_assert(pixel_buf != nullptr);
+
+    const size_t conv_dim_x = 3;
+    const size_t conv_dim_y = 3;
+
+    Matrix<float> emb_ker(conv_dim_x, conv_dim_y);
+    emb_ker = {
+        -2,  -1, 0,
+        -1,   1, 1,
+         0,   1, 2
+    };
+
+    Matrix<GSPixel<float>> gspixel_mat = ConvertRGBImageToGrayScaleMat<uint8_t, float>(pixel_buf, width, height);
+
+    Matrix<GSPixel<float>> emb_mat = Convolution(gspixel_mat, emb_ker);
+
+    Matrix<GSPixel<float>> norm_mat = Normalize(emb_mat);
+
+    ConvertGrayScaleMatToRGBImage(norm_mat, pixel_buf);
+}
+
+void EdgeDetectorSobelFilter::operator()(PixelU* pixel_buf, size_t width, size_t height) {
     fcy_assert(pixel_buf != nullptr);
 
     // Sobel operator
@@ -160,6 +208,28 @@ void EdgeDetectorFilter::operator()(PixelU* pixel_buf, size_t width, size_t heig
     Matrix<GSPixel<float>> grad_magn = (grad_x2 + grad_y2).Apply([](GSPixel<float> x){ return sqrtf(x); });
 
     Matrix<GSPixel<float>> norm_mat = Normalize(grad_magn);
+
+    ConvertGrayScaleMatToRGBImage(norm_mat, pixel_buf);
+}
+
+void EdgeDetectorLaplacianFilter::operator()(PixelU* pixel_buf, size_t width, size_t height) {
+    fcy_assert(pixel_buf != nullptr);
+
+    const size_t conv_dim_x = 3;
+    const size_t conv_dim_y = 3;
+
+    Matrix<float> laplace_ker(conv_dim_x, conv_dim_y);
+    laplace_ker = {
+        0,  1, 0,
+        1, -4, 1,
+        0,  1, 0
+    };
+
+    Matrix<GSPixel<float>> gspixel_mat = ConvertRGBImageToGrayScaleMat<uint8_t, float>(pixel_buf, width, height);
+
+    Matrix<GSPixel<float>> laplace_mat = Convolution(gspixel_mat, laplace_ker);
+
+    Matrix<GSPixel<float>> norm_mat = Normalize(laplace_mat);
 
     ConvertGrayScaleMatToRGBImage(norm_mat, pixel_buf);
 }
@@ -283,6 +353,7 @@ static void ConvertGrayScaleChanelsMatsToRGSImage(Matrix<GSPixel<U>>* red_ch_mat
     for (size_t i = 0; i < width; i++) {
         for (size_t j = 0; j < height; j++) {
             Pixel<T> pixel;
+
             pixel.SetRedColor(red_ch_mat->GetElem(i, j));
             pixel.SetGreenColor(green_ch_mat->GetElem(i, j));
             pixel.SetBlueColor(blue_ch_mat->GetElem(i, j));

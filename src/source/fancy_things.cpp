@@ -8,6 +8,7 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Window/Keyboard.hpp>
 
+#include "matrix.hpp"
 #include "spdlog/spdlog.h"
 
 #include "filters.hpp"
@@ -54,8 +55,12 @@ void MainLoop(sf::RenderWindow* window,
         // ReverseFilter filter;
         // BoxBlurFilter filter;
         // GaussianBlurFilter filter;
-        EdgeDetectorFilter filter;
+        // MotionBlurFilter filter;
+        EmbossingFilter filter;
+        // EdgeDetectorSobelFilter filter;
+        // EdgeDetectorLaplacianFilter filter;
         raw_image.Filter(&filter);
+
 
         render_state->use_algo = false;
     }
@@ -64,7 +69,7 @@ void MainLoop(sf::RenderWindow* window,
         sf::Image image_to_save;
         image_to_save.create(raw_image.GetWidth(), raw_image.GetHeight(), raw_image.GetPixelPtr());
 
-        std::string unique_file_name = GenerateUniqueFileName("image", "png");
+        std::string unique_file_name = GenerateUniqueFileName("images/image", "png");
         image_to_save.saveToFile(unique_file_name);
 
         render_state->save_image = false;

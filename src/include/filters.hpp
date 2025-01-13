@@ -31,17 +31,36 @@ class GaussianBlurFilter : public IFilter {
     void operator()(PixelU* pixel_buf, size_t width, size_t height) override; 
 };
 
+class MotionBlurFilter : public IFilter {
+   public:
+    ~MotionBlurFilter() override {};
+    void operator()(PixelU* pixel_buf, size_t width, size_t height) override; 
+};
+
 class ThresholdFilter : public IFilter {
   public:
     ~ThresholdFilter() override {};
     void operator()(PixelU* pixel_buf, size_t width, size_t height) override;
 };
 
-class EdgeDetectorFilter : public IFilter {
+class EmbossingFilter : public IFilter {
   public:
-    ~EdgeDetectorFilter() override {};
+    ~EmbossingFilter() override {};
     void operator()(PixelU* pixel_buf, size_t width, size_t height) override;
 };
+
+class EdgeDetectorSobelFilter : public IFilter {
+  public:
+    ~EdgeDetectorSobelFilter() override {};
+    void operator()(PixelU* pixel_buf, size_t width, size_t height) override;
+};
+
+class EdgeDetectorLaplacianFilter : public IFilter {
+  public:
+    ~EdgeDetectorLaplacianFilter() override {};
+    void operator()(PixelU* pixel_buf, size_t width, size_t height) override;
+};
+
 
 } // namespace fcy
 

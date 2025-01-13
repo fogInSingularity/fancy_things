@@ -151,11 +151,11 @@ Pixel<T> GSPixelToPixel(GSPixel<T> gspixel) {
 
     spdlog::trace("GSPixel to Pixel: gspixel gray: {}", gspixel);
 
-    // T clamped_value = std::clamp(gspixel, static_cast<T>(0), static_cast<T>(255));
+    T clamped_value = std::clamp(gspixel, static_cast<T>(0), static_cast<T>(1)) * 255;
     // spdlog::trace("clamped value: {}", clamped_value);
 
-    // T new_rgb_value = clamped_value;
-    T new_rgb_value = gspixel * 255;
+    T new_rgb_value = clamped_value;
+    // T new_rgb_value = gspixel * 255;
     Pixel<T> pixel{new_rgb_value, new_rgb_value, new_rgb_value};
 
     return pixel;
