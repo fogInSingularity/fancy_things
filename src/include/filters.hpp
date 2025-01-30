@@ -61,7 +61,6 @@ class EdgeDetectorLaplacianFilter : public IFilter {
     void operator()(PixelU* pixel_buf, size_t width, size_t height) override;
 };
 
-
 } // namespace fcy
 
 #endif // FILTERS_HPP_

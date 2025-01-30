@@ -56,8 +56,8 @@ void MainLoop(sf::RenderWindow* window,
         // BoxBlurFilter filter;
         // GaussianBlurFilter filter;
         // MotionBlurFilter filter;
-        EmbossingFilter filter;
-        // EdgeDetectorSobelFilter filter;
+        // EmbossingFilter filter;
+        EdgeDetectorSobelFilter filter;
         // EdgeDetectorLaplacianFilter filter;
         raw_image.Filter(&filter);
 

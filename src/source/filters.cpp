@@ -94,7 +94,7 @@ void GaussianBlurFilter::operator()(PixelU* pixel_buf, size_t width, size_t heig
     for (size_t i = 0; i < ker_dim_x; i++) {
         for (size_t j = 0; j < ker_dim_y; j++) {
             int64_t x = static_cast<int64_t>(i) - ker_dim_x / 2;
-            int64_t y = static_cast<int64_t>(i) - ker_dim_y / 2;
+            int64_t y = static_cast<int64_t>(j) - ker_dim_y / 2;
 
             float normal_value = NormalDistributionCurve<float>(mean, mean, stddev, x, y);
             spdlog::trace("[i:{}, j:{}] normal value: {}", i, j, normal_value);
