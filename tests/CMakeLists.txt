@@ -1,0 +1,22 @@
+set(TEST
+    ${PROJECT_NAME}_tests
+)
+
+if(googletest_ADDED)   
+    add_executable(${TEST}
+        matrix_test.cpp
+    )
+    
+    target_link_libraries(${TEST}
+        PRIVATE GTest::gtest_main
+    )
+
+    target_link_libraries(${TEST} PRIVATE spdlog)
+    
+    target_include_directories(${TEST}
+        PRIVATE
+            ${CMAKE_SOURCE_DIR}/src/include
+    )
+
+    add_test(NAME ${TEST} COMMAND ${TEST})
+endif()

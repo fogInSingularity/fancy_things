@@ -11,3 +11,5 @@ rbuild
 *.png
 *jpeg
 images
+Testing
+fancy_tests.log

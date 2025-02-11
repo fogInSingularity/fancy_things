@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21) # current lts version
 
-project("fancy_things")
+project(fancy_things)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     message(STATUS "Building in Debug mode")
@@ -17,12 +17,11 @@ set(SRCS
     src/source/fancy_things.cpp
 )
 
-add_executable(fancy_things ${SRCS})
+add_executable(${PROJECT_NAME} ${SRCS})
 
-target_include_directories(fancy_things
+target_include_directories(${PROJECT_NAME}
     PUBLIC
         src/include/
-        lib_cpp/include/
 )
 
 # set(CMAKE_CXX_COMPILER gcc)
@@ -43,7 +42,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdiagnostics-color=always") # For all targets
 endif()
 
-target_link_libraries(fancy_things PUBLIC "sfml-graphics" "sfml-window" "sfml-system")
+target_link_libraries(${PROJECT_NAME} PRIVATE "sfml-graphics" "sfml-window" "sfml-system")
 
 # use cpm package manager
 include(cmake/CPM.cmake)
@@ -59,6 +58,16 @@ CPMAddPackage(
 
 if (spdlog_ADDED)
     # message(STATUS "spdlog src dir: ${spdlog_SOURCE_DIR}")
-    target_link_libraries(fancy_things PRIVATE spdlog)
-    target_include_directories(fancy_things PUBLIC "${spdlog_SOURCE_DIR}/include/")
+    target_link_libraries(${PROJECT_NAME} PRIVATE spdlog)
+    # target_include_directories(${PROJECT_NAME} PRIVATE "${spdlog_SOURCE_DIR}/include/")
 endif()
+
+CPMAddPackage(
+    NAME googletest
+    GITHUB_REPOSITORY google/googletest
+    GIT_TAG v1.16.0
+    OPTIONS "INSTALL_GTEST OFF"
+)
+
+enable_testing()
+add_subdirectory(tests)

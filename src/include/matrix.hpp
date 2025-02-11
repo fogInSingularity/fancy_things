@@ -5,9 +5,9 @@
 #include <cstring>
 #include <algorithm>
 #include <initializer_list>
-#include <functional>
 
-#include "spdlog/spdlog.h"
+#include <spdlog/spdlog.h>
+#include <spdlog/fmt/ranges.h> // for initializer_list
 
 #include "fcy_assert.hpp"
 
@@ -33,7 +33,7 @@ class Matrix {
     }
   public:
     Matrix(const size_t dim_x, const size_t dim_y, const T* matrix_array = nullptr);
-    Matrix(const size_t dim_x, const size_t dim_y, std::initializer_list<T> matrix_list);
+    Matrix(const size_t dim_x, const size_t dim_y, const std::initializer_list<T>& matrix_list);
     Matrix(const Matrix& mat);
     template <typename U>
     explicit Matrix(const Matrix<U>& mat);
@@ -94,7 +94,7 @@ Matrix<T> Convolution(const Matrix<T>& target, const Matrix<U>& kernel);
 
 template <typename T>
 Matrix<T>::Matrix(const size_t dim_x, const size_t dim_y, const T* matrix_array) 
-    : dim_x_{dim_x}, dim_y_{dim_y}, mat_memory_{new T[dim_x * dim_y]}
+    : dim_x_{dim_x}, dim_y_{dim_y}, mat_memory_{new T[dim_x * dim_y]{}}
 {
     spdlog::trace("Matrix constructor call: {:p} {}x{}", reinterpret_cast<const void*>(matrix_array), dim_x, dim_y);
 
@@ -105,17 +105,17 @@ Matrix<T>::Matrix(const size_t dim_x, const size_t dim_y, const T* matrix_array)
 }
 
 template <typename T>
-Matrix<T>::Matrix(const size_t dim_x, const size_t dim_y, std::initializer_list<T> matrix_list) 
-    : dim_x_{dim_x}, dim_y_{dim_y}, mat_memory_{new T[dim_x * dim_y]}
+Matrix<T>::Matrix(const size_t dim_x, const size_t dim_y, const std::initializer_list<T>& matrix_list) 
+    : dim_x_{dim_x}, dim_y_{dim_y}, mat_memory_{new T[dim_x * dim_y]{}}
 {
-    spdlog::trace("Matrix constructor call: {:p} {}x{}", reinterpret_cast<const void*>(matrix_list), dim_x, dim_y);
+    spdlog::trace("Matrix constructor call: {} {}x{}", matrix_list, dim_x, dim_y); // FIXME support initializer_list format
 
     std::copy(matrix_list.begin(), matrix_list.end(), mat_memory_);
 }
 
 template <typename T>
 Matrix<T>::Matrix(const Matrix<T>& mat) 
-    : dim_x_{mat.dim_x_}, dim_y_{mat.dim_y_}, mat_memory_{new T[mat.dim_x_ * mat.dim_y_]}
+    : dim_x_{mat.dim_x_}, dim_y_{mat.dim_y_}, mat_memory_{new T[mat.dim_x_ * mat.dim_y_]{}}
 {
     spdlog::trace("matrix copy constructor");
 
@@ -124,7 +124,7 @@ Matrix<T>::Matrix(const Matrix<T>& mat)
 
 template <typename T> template <typename U>
 Matrix<T>::Matrix(const Matrix<U>& mat)
-    : dim_x_{mat.dim_x_}, dim_y_{mat.dim_y_}, mat_memory_{new T[mat.dim_x_ * mat.dim_y_]}
+    : dim_x_{mat.dim_x_}, dim_y_{mat.dim_y_}, mat_memory_{new T[mat.dim_x_ * mat.dim_y_]{}}
 {
     spdlog::trace("matrix copy constructor");
 
@@ -301,5 +301,32 @@ void Matrix<T>::NormalizeTo1() {
 }
 
 } // namespace fcy
+
+// format for matrix
+
+template <typename T>
+struct fmt::formatter<fcy::Matrix<T>> {
+    constexpr auto parse(format_parse_context& ctx) -> decltype(ctx.begin()) {
+        return ctx.begin();
+    }
+
+    template <typename FormatContext>
+    auto format(const fcy::Matrix<T>& matrix, FormatContext& ctx) const -> decltype(ctx.out()) {
+        auto out = ctx.out();
+        size_t dim_x = matrix.GetDimX();
+        size_t dim_y = matrix.GetDimY();
+
+        fmt::format_to(out, "Matrix ({}x{}):\n", dim_x, dim_y);
+
+        for (size_t j = 0; j < dim_y; ++j) {
+            fmt::format_to(out, "[ ");
+            for (size_t i = 0; i < dim_x; ++i) {
+                fmt::format_to(out, "{} ", matrix.GetElem(i, j));
+            }
+            fmt::format_to(out, "]\n");
+        }
+        return out;
+    }
+};
 
 #endif // MATRIX_HPP_
