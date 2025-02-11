@@ -4,6 +4,7 @@ set(TEST
 
 if(googletest_ADDED)   
     add_executable(${TEST}
+        main_test.cpp
         matrix_test.cpp
     )
     

@@ -50,7 +50,7 @@ class Matrix {
     size_t GetDimY() const { return dim_y_; };
 
     T GetElem(size_t index_i, size_t index_j) const { 
-        if ((index_i > dim_x_) || (index_j > dim_y_)) {
+        if ((index_i >= dim_x_) || (index_j >= dim_y_)) {
             spdlog::error("matrix get elem out of rang: i:{}, j:{}, dim x:{}, dim y:{}", index_i, index_j, dim_x_, dim_y_);
             throw MatrixException::OutOfRange;
         }
@@ -59,7 +59,7 @@ class Matrix {
     }
 
     void SetElem(size_t index_i, size_t index_j, T elem) {
-        if ((index_i > dim_x_) || (index_j > dim_y_)) {
+        if ((index_i >= dim_x_) || (index_j >= dim_y_)) {
             spdlog::error("matrix set elem out of range: i:{}, j:{}, dim x:{}, dim y:{}", index_i, index_j, dim_x_, dim_y_);
             throw MatrixException::OutOfRange;
         }

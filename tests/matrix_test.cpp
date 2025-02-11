@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 
 #include <spdlog/spdlog.h>
-#include <spdlog/sinks/basic_file_sink.h>
 
 #include <matrix.hpp>
 
@@ -16,30 +15,25 @@ TEST(MatrixTest, MatrixMul) {
     spdlog::trace("{}", res1x1);
     EXPECT_EQ(res1x1.GetElem(0, 0), 1);
 
-    fcy::Matrix<int> a{2, 2, {1, 0, 0, 1}};
-    fcy::Matrix<int> b{2, 2, {1, 0, 0, 1}};
-    auto res = a * b;
-    spdlog::trace("{}", res);
-    EXPECT_EQ(res.GetElem(0, 0), 1);
-    EXPECT_EQ(res.GetElem(1, 0), 0);
-
-    res = a + b;
-    spdlog::trace("{}", res);
-    EXPECT_EQ(res.GetElem(0, 0), 2);
-    EXPECT_EQ(res.GetElem(1, 0), 0);
+    fcy::Matrix<int> mat2x2_a{2, 2, {1, 0, 0, 1}};
+    fcy::Matrix<int> mat2x2_b{2, 2, {1, 0, 0, 1}};
+    auto res2x2 = mat2x2_a * mat2x2_b;
+    spdlog::trace("{}", res2x2);
+    EXPECT_EQ(res2x2.GetElem(0, 0), 1);
+    EXPECT_EQ(res2x2.GetElem(1, 0), 0);
 }
 
-int main(int argc, char** argv) {
-    auto logger = spdlog::basic_logger_mt("fancy_things", "fancy_tests.log", true);
-    spdlog::set_default_logger(logger);
-
-#if defined (NDEBUG)
-    spdlog::set_level(spdlog::level::info);
-#else // NDEBUG
-    // spdlog::flush_on(spdlog::level::trace);
-    spdlog::set_level(spdlog::level::trace);
-#endif // NDEBUG 
-
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+TEST(MatrixTest, MatrixAdd) {
+    fcy::Matrix<int> mat2x2_a{2, 2, {1, 2, 3, 4}};
+    fcy::Matrix<int> mat2x2_b{2, 2, {5, 6, 7, 8}};
+    auto res = mat2x2_a + mat2x2_b;
+    spdlog::trace("{}", res);
+    EXPECT_EQ(res.GetElem(0, 0), 6);
+    EXPECT_EQ(res.GetElem(1, 1), 12);
 }
+
+TEST(MatrixTest, MatrixEx) {
+    fcy::Matrix<int> mat{1, 1, {1}};
+    EXPECT_THROW(mat.GetElem(1, 1), fcy::MatrixException);
+}
+
