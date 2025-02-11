@@ -62,23 +62,3 @@ if (spdlog_ADDED)
     target_link_libraries(fancy_things PRIVATE spdlog)
     target_include_directories(fancy_things PUBLIC "${spdlog_SOURCE_DIR}/include/")
 endif()
-
-target_link_libraries(fancy_things PUBLIC "bfd" "dl")
-
-if(USE_BACKWARD_LIB)
-    # install libdw libbfd libdwarf
-    message(STATUS "try to add backward:")
-
-    CPMAddPackage(
-        NAME backward-cpp
-        GITHUB_REPOSITORY bombela/backward-cpp
-        GIT_TAG v1.6 # Or latest version
-    )
-
-    if(backward-cpp_ADDED) 
-        target_compile_definitions(fancy_things PRIVATE USE_BACKWARD_LIB)
-        target_compile_definitions(fancy_things PRIVATE BACKWARD_HAS_BFD=1)
-        # target_link_libraries(fancy_things PRIVATE backward-cpp)
-        target_include_directories(fancy_things PUBLIC "${backward-cpp_SOURCE_DIR}")
-    endif()
-endif()
