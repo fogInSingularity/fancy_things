@@ -2,9 +2,13 @@
 #include <iostream>
 #include <string>
 
+// #include <SFML/Graphics.hpp>
 #include <SFML/Graphics.hpp>
+#include <SFML/System.hpp>
+#include <SFML/Window.hpp>
 
 #include <spdlog/spdlog.h>
+#include <spdlog/common.h>
 #include <spdlog/sinks/basic_file_sink.h>
 
 #include "fancy_things.hpp"

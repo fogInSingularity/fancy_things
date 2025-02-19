@@ -6,10 +6,9 @@
 #include <iomanip>
 
 #include <SFML/Graphics.hpp>
-#include <SFML/Window/Keyboard.hpp>
+#include <SFML/Window.hpp>
 
-#include "matrix.hpp"
-#include "spdlog/spdlog.h"
+#include <spdlog/spdlog.h>
 
 #include "filters.hpp"
 #include "to_str.hpp"

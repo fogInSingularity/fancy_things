@@ -57,9 +57,7 @@ CPMAddPackage(
 )
 
 if (spdlog_ADDED)
-    # message(STATUS "spdlog src dir: ${spdlog_SOURCE_DIR}")
     target_link_libraries(${PROJECT_NAME} PRIVATE spdlog)
-    # target_include_directories(${PROJECT_NAME} PRIVATE "${spdlog_SOURCE_DIR}/include/")
 endif()
 
 CPMAddPackage(
