@@ -1,23 +1,27 @@
-set(TEST
-    ${PROJECT_NAME}_tests
-)
+add_executable(${PROJECT_NAME}_tests) 
 
-if(googletest_ADDED)   
-    add_executable(${TEST}
+target_sources(${PROJECT_NAME}_tests
+    PRIVATE 
         main_test.cpp
         matrix_test.cpp
-    )
-    
-    target_link_libraries(${TEST}
-        PRIVATE GTest::gtest_main
-    )
+)
 
-    target_link_libraries(${TEST} PRIVATE spdlog)
-    
-    target_include_directories(${TEST}
-        PRIVATE
-            ${CMAKE_SOURCE_DIR}/include
-    )
+target_include_directories(${PROJECT_NAME}_tests
+    PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+)
 
-    add_test(NAME ${TEST} COMMAND ${TEST})
-endif()
+target_link_libraries(${PROJECT_NAME}_tests
+    PRIVATE
+        GTest::gtest_main
+        spdlog
+)
+
+add_test(NAME ${PROJECT_NAME}_tests COMMAND ${PROJECT_NAME}_tests)
+
+CPMAddPackage(
+    NAME googletest
+    GITHUB_REPOSITORY google/googletest
+    GIT_TAG v1.16.0
+    OPTIONS "INSTALL_GTEST OFF"
+)
