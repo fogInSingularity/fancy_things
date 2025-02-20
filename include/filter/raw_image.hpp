@@ -1,15 +1,16 @@
 #ifndef RAW_IMAGE_HPP_
 #define RAW_IMAGE_HPP_
 
+#include <cassert>
 #include <cstdint>
 #include <cstdlib>
 #include <algorithm>
 #include <cstring>
 
-#include "fcy_assert.hpp"
-#include "pixel.hpp"
-#include "filters.hpp"
-#include "spdlog/spdlog.h"
+#include <spdlog/spdlog.h>
+
+#include "filter/pixel.hpp"
+#include "filter/filters.hpp"
 
 namespace fcy {
 
@@ -20,7 +21,7 @@ class RawImage {
     size_t height_;
   public:
     RawImage(const uint8_t* raw_image_buf, size_t width, size_t height) {
-        fcy_assert(raw_image_buf != nullptr);
+        assert(raw_image_buf != nullptr);
 
         spdlog::trace("RawImage constructor call: {:p} {}x{}", reinterpret_cast<const void*>(raw_image_buf), width, height);
 

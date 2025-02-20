@@ -1,12 +1,11 @@
 #ifndef PIXEL_HPP_
 #define PIXEL_HPP_
 
+#include <cassert>
 #include <cstdint>
 #include <algorithm>
 
-#include "spdlog/spdlog.h"
-
-#include <fcy_assert.hpp>
+#include <spdlog/spdlog.h>
 
 namespace fcy {
 
@@ -147,7 +146,7 @@ using GSPixelD = GSPixel<double>;
 
 template <typename T>
 Pixel<T> GSPixelToPixel(GSPixel<T> gspixel) {
-    if (gspixel < 0) { fcy_assert(0 && "gray < 0"); }
+    if (gspixel < 0) { assert(0 && "gray < 0"); }
 
     spdlog::trace("GSPixel to Pixel: gspixel gray: {}", gspixel);
 

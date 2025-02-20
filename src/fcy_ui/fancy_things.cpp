@@ -1,4 +1,4 @@
-#include "fancy_things.hpp"
+#include "fcy_ui/fancy_things.hpp"
 
 #include <string>
 #include <sstream>
@@ -10,10 +10,10 @@
 
 #include <spdlog/spdlog.h>
 
-#include "filters.hpp"
-#include "to_str.hpp"
-#include "fcy_assert.hpp"
-#include "raw_image.hpp"
+#include "filter/filters.hpp"
+#include "filter/raw_image.hpp"
+#include "fcy_ui/to_str.hpp"
+#include "fcy_ui/fcy_assert.hpp"
 
 namespace fcy {
 

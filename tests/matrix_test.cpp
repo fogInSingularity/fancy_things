@@ -2,7 +2,7 @@
 
 #include <spdlog/spdlog.h>
 
-#include <matrix.hpp>
+#include "filter/matrix.hpp"
 
 TEST(MatrixTest, MatrixMul) {
     fcy::Matrix<int> mat1x1_a{1, 1, {1}};

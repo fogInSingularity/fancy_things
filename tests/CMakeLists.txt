@@ -16,7 +16,7 @@ if(googletest_ADDED)
     
     target_include_directories(${TEST}
         PRIVATE
-            ${CMAKE_SOURCE_DIR}/src/include
+            ${CMAKE_SOURCE_DIR}/include
     )
 
     add_test(NAME ${TEST} COMMAND ${TEST})

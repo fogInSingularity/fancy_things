@@ -12,16 +12,16 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 set(SRCS
-    src/source/main.cpp
-    src/source/filters.cpp
-    src/source/fancy_things.cpp
+    src//main.cpp
+    src/filter/filters.cpp
+    src/fcy_ui/fancy_things.cpp
 )
 
 add_executable(${PROJECT_NAME} ${SRCS})
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC
-        src/include/
+        include/
 )
 
 # set(CMAKE_CXX_COMPILER gcc)

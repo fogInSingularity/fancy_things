@@ -1,6 +1,7 @@
 #ifndef MATRIX_HPP_
 #define MATRIX_HPP_
 
+#include <cassert>
 #include <cstddef>
 #include <cstring>
 #include <algorithm>
@@ -8,8 +9,6 @@
 
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ranges.h> // for initializer_list
-
-#include "fcy_assert.hpp"
 
 namespace fcy {
 

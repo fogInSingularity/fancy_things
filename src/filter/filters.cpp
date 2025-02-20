@@ -1,17 +1,17 @@
-#include "filters.hpp"
+#include "filter/filters.hpp"
 
 #include <cmath>
 #include <cstddef>
 #include <climits>
 #include <cstdint>
+#include <cassert>
 #include <numbers>
 #include <type_traits>
 
-#include "spdlog/spdlog.h"
+#include <spdlog/spdlog.h>
 
-#include "pixel.hpp"
-#include "matrix.hpp"
-#include "fcy_assert.hpp"
+#include "filter/pixel.hpp"
+#include "filter/matrix.hpp"
 
 namespace fcy {
 
@@ -40,7 +40,7 @@ static T NormalDistributionCurve(T mean_x, T mean_y, T stddev, T x, T y);
 // Filters ----------------------------------------------------------------------------------------
 
 void ReverseFilter::operator()(PixelU* pixel_buf, size_t width, size_t height) {
-    fcy_assert(pixel_buf != nullptr);
+    assert(pixel_buf != nullptr);
 
     for (PixelU* iter_pixels = pixel_buf; iter_pixels < pixel_buf + width * height; iter_pixels++) {
         iter_pixels->SetRedColor(UCHAR_MAX - iter_pixels->GetRedColor());
@@ -50,7 +50,7 @@ void ReverseFilter::operator()(PixelU* pixel_buf, size_t width, size_t height) {
 }
 
 void BoxBlurFilter::operator()(PixelU* pixel_buf, size_t width, size_t height) {
-    fcy_assert(pixel_buf != nullptr);
+    assert(pixel_buf != nullptr);
 
     // https://en.wikipedia.org/wiki/Box_blur
 
@@ -80,7 +80,7 @@ void BoxBlurFilter::operator()(PixelU* pixel_buf, size_t width, size_t height) {
 }
 
 void GaussianBlurFilter::operator()(PixelU* pixel_buf, size_t width, size_t height) { 
-    fcy_assert(pixel_buf != nullptr);
+    assert(pixel_buf != nullptr);
 
     // https://en.wikipedia.org/wiki/Gaussian_blur
 
@@ -119,7 +119,7 @@ void GaussianBlurFilter::operator()(PixelU* pixel_buf, size_t width, size_t heig
 
 
 void MotionBlurFilter::operator()(PixelU* pixel_buf, size_t width, size_t height) { 
-    fcy_assert(pixel_buf != nullptr);
+    assert(pixel_buf != nullptr);
 
     const size_t conv_dim_x = 15;
     const size_t conv_dim_y = 15;
@@ -144,7 +144,7 @@ void MotionBlurFilter::operator()(PixelU* pixel_buf, size_t width, size_t height
 }
 
 void ThresholdFilter::operator()(PixelU* pixel_buf, size_t width, size_t height) {
-    fcy_assert(pixel_buf != nullptr);
+    assert(pixel_buf != nullptr);
 
     (void)width;
     (void)height;
@@ -153,7 +153,7 @@ void ThresholdFilter::operator()(PixelU* pixel_buf, size_t width, size_t height)
 }
 
 void EmbossingFilter::operator()(PixelU* pixel_buf, size_t width, size_t height) {
-    fcy_assert(pixel_buf != nullptr);
+    assert(pixel_buf != nullptr);
 
     const size_t conv_dim_x = 3;
     const size_t conv_dim_y = 3;
@@ -175,7 +175,7 @@ void EmbossingFilter::operator()(PixelU* pixel_buf, size_t width, size_t height)
 }
 
 void EdgeDetectorSobelFilter::operator()(PixelU* pixel_buf, size_t width, size_t height) {
-    fcy_assert(pixel_buf != nullptr);
+    assert(pixel_buf != nullptr);
 
     // Sobel operator
     // https://en.wikipedia.org/wiki/Sobel_operator
@@ -213,7 +213,7 @@ void EdgeDetectorSobelFilter::operator()(PixelU* pixel_buf, size_t width, size_t
 }
 
 void EdgeDetectorLaplacianFilter::operator()(PixelU* pixel_buf, size_t width, size_t height) {
-    fcy_assert(pixel_buf != nullptr);
+    assert(pixel_buf != nullptr);
 
     const size_t conv_dim_x = 3;
     const size_t conv_dim_y = 3;
@@ -285,7 +285,7 @@ template <typename T, typename U>
 static Matrix<GSPixel<U>> ConvertRGBImageToGrayScaleMat(const Pixel<T>* pixel_buf, size_t width, size_t height) {
     static_assert(std::is_arithmetic<T>());
     static_assert(std::is_arithmetic<U>());
-    fcy_assert(pixel_buf != nullptr);
+    assert(pixel_buf != nullptr);
 
     spdlog::trace("ConvertRGBImageToGrayScale:");
 
@@ -304,7 +304,7 @@ template <typename T, typename U>
 static void ConvertGrayScaleMatToRGBImage(const Matrix<GSPixel<U>>& gspixel_mat, Pixel<T>* pixel_buf) {
     static_assert(std::is_arithmetic<T>());
     static_assert(std::is_arithmetic<U>());
-    fcy_assert(pixel_buf != nullptr);   
+    assert(pixel_buf != nullptr);   
 
     spdlog::trace("ConvertGrayScaleMatToRGBImage");
 
@@ -324,10 +324,10 @@ static void ConvertRGBImageToGrayScaleChanelsMats(const Pixel<T>* pixel_buf, siz
 {
     static_assert(std::is_arithmetic<T>());
     static_assert(std::is_arithmetic<U>());
-    fcy_assert(pixel_buf != nullptr);   
-    fcy_assert(red_ch_mat != nullptr);
-    fcy_assert(green_ch_mat != nullptr);
-    fcy_assert(blue_ch_mat != nullptr); 
+    assert(pixel_buf != nullptr);   
+    assert(red_ch_mat != nullptr);
+    assert(green_ch_mat != nullptr);
+    assert(blue_ch_mat != nullptr); 
 
     for (size_t i = 0; i < width; i++) {
         for (size_t j = 0; j < height; j++) {
@@ -345,10 +345,10 @@ static void ConvertGrayScaleChanelsMatsToRGSImage(Matrix<GSPixel<U>>* red_ch_mat
 {
     static_assert(std::is_arithmetic<T>());
     static_assert(std::is_arithmetic<U>());
-    fcy_assert(pixel_buf != nullptr);   
-    fcy_assert(red_ch_mat != nullptr);
-    fcy_assert(green_ch_mat != nullptr);
-    fcy_assert(blue_ch_mat != nullptr); 
+    assert(pixel_buf != nullptr);   
+    assert(red_ch_mat != nullptr);
+    assert(green_ch_mat != nullptr);
+    assert(blue_ch_mat != nullptr); 
 
     for (size_t i = 0; i < width; i++) {
         for (size_t j = 0; j < height; j++) {

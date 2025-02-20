@@ -2,7 +2,6 @@
 #include <iostream>
 #include <string>
 
-// #include <SFML/Graphics.hpp>
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
 #include <SFML/Window.hpp>
@@ -11,7 +10,7 @@
 #include <spdlog/common.h>
 #include <spdlog/sinks/basic_file_sink.h>
 
-#include "fancy_things.hpp"
+#include "fcy_ui/fancy_things.hpp"
 
 int main(const int argc, const char* argv[]) {
     // use when spdlog v2

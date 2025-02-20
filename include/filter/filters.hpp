@@ -3,7 +3,7 @@
 
 #include <cstddef>
 
-#include "pixel.hpp"
+#include "filter/pixel.hpp"
 
 namespace fcy { 
 
