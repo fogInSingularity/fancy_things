@@ -11,26 +11,26 @@
 
 #include "filter/pixel.hpp"
 #include "filter/filters.hpp"
+#include "filter/utility.hpp"
 
-namespace fcy {
+namespace ftr {
 
 class RawImage {
   private:
+    ftr::Size size_;
     PixelU* pixel_buf_;
-    size_t width_;
-    size_t height_;
   public:
-    RawImage(const uint8_t* raw_image_buf, size_t width, size_t height) {
+    RawImage(const uint8_t* raw_image_buf, Size size) 
+        : size_{size}, pixel_buf_{new PixelU[size.w * size.h]}
+    {
         assert(raw_image_buf != nullptr);
 
-        spdlog::trace("RawImage constructor call: {:p} {}x{}", reinterpret_cast<const void*>(raw_image_buf), width, height);
+        spdlog::trace("RawImage constructor call: {:p} {}x{}", reinterpret_cast<const void*>(raw_image_buf), size_.w, size_.h);
 
-        pixel_buf_ = new PixelU[width * height];
+        size_t area = size.w * size.h;
+        pixel_buf_ = new PixelU[area];
         const PixelU* image_buf = reinterpret_cast<const PixelU*>(raw_image_buf);
-        std::copy(image_buf, image_buf + width * height, pixel_buf_);
-
-        width_ = width;
-        height_ = height;
+        std::copy(image_buf, image_buf + area, pixel_buf_);
     }
 
     ~RawImage() {
@@ -41,14 +41,14 @@ class RawImage {
         return  reinterpret_cast<const uint8_t*>(pixel_buf_);
     }
 
-    size_t GetWidth()  const { return width_; }
-    size_t GetHeight() const { return height_; }
+    size_t GetWidth()  const { return size_.w; }
+    size_t GetHeight() const { return size_.h; }
 
     void Filter(IFilter* filter) {
-        (*filter)(pixel_buf_, width_, height_);
+        // (*filter)(pixel_buf_, size_.w, size_.h);
     }
 };
 
-} // namespace fcy
+} // namespace ftr
  
 #endif // RAW_IMAGE_HPP_

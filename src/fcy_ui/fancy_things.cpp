@@ -1,5 +1,6 @@
 #include "fcy_ui/fancy_things.hpp"
 
+#include <SFML/Config.hpp>
 #include <string>
 #include <sstream>
 #include <chrono>
@@ -11,8 +12,9 @@
 #include <spdlog/spdlog.h>
 
 #include "filter/filters.hpp"
-#include "filter/raw_image.hpp"
-#include "fcy_ui/to_str.hpp"
+#include "filter/pixel.hpp"
+#include "filter/utility.hpp"
+#include "filter/matrix.hpp"
 #include "fcy_ui/fcy_assert.hpp"
 
 namespace fcy {
@@ -47,26 +49,26 @@ void MainLoop(sf::RenderWindow* window,
     sf::Vector2u image_size = image->getSize();
     spdlog::debug("main render loop: {}: {}, {}: {}", TO_STR(image_size.x), image_size.x, TO_STR(image_size.y), image_size.y);
  
-    RawImage raw_image(image->getPixelsPtr(), image_size.x, image_size.y);
+    ftr::Matrix<ftr::PixelU> raw_image{{image_size.x, image_size.y}, reinterpret_cast<const ftr::PixelU*>(image->getPixelsPtr())};
 
     if (render_state->use_algo) {
-        // ThresholdFilter filter;
-        // ReverseFilter filter;
-        // BoxBlurFilter filter;
-        // GaussianBlurFilter filter;
-        // MotionBlurFilter filter;
-        // EmbossingFilter filter;
-        EdgeDetectorSobelFilter filter;
-        // EdgeDetectorLaplacianFilter filter;
-        raw_image.Filter(&filter);
-
+        // ftr::ReverseFilter filter;
+        // ftr::BoxBlurFilter filter;
+        // ftr::GaussianBlurFilter filter;
+        // ftr::MotionBlurFilter filter;
+        // ftr::EmbossingFilter filter;
+        ftr::EdgeDetectorSobelFilter filter;
+        // ftr::ThresholdFilter filter;
+        filter(&raw_image);
+        // ftr::EdgeDetectorLaplacianFilter filter;
+        // raw_image.Filter(&filter);
 
         render_state->use_algo = false;
     }
 
     if (render_state->save_image) {
         sf::Image image_to_save;
-        image_to_save.create(raw_image.GetWidth(), raw_image.GetHeight(), raw_image.GetPixelPtr());
+        image_to_save.create(raw_image.Width(), raw_image.Height(), reinterpret_cast<const sf::Uint8*>(raw_image.GetData()));
 
         std::string unique_file_name = GenerateUniqueFileName("images/image", "png");
         image_to_save.saveToFile(unique_file_name);
@@ -74,7 +76,7 @@ void MainLoop(sf::RenderWindow* window,
         render_state->save_image = false;
     }
 
-    image->create(image_size.x, image_size.y, raw_image.GetPixelPtr());
+    image->create(image_size.x, image_size.y, reinterpret_cast<const sf::Uint8*>(raw_image.GetData()));
 
     window->setSize(image_size);
 }

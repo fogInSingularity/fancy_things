@@ -7,18 +7,19 @@
 
 #include <spdlog/spdlog.h>
 
-namespace fcy {
+namespace ftr {
 
 template <typename T>
 class Pixel {
   // private:
   public: // public becase it doenst have any invariants
-    T red_;
-    T green_;
-    T blue_;
-    T alpha_;
+    T red_   = 0;
+    T green_ = 0;
+    T blue_  = 0;
+    T alpha_ = 255;
   public:
-    explicit Pixel(T red = 0, T green = 0, T blue = 0, T alpha = 255) noexcept // 255?
+    Pixel() noexcept {}
+    Pixel(T red, T green, T blue, T alpha = 255) noexcept
         : red_{red}, green_{green}, blue_{blue}, alpha_{alpha} {}
 
     template <typename U>
@@ -80,7 +81,16 @@ class Pixel {
         red_   += pixel.red_; 
         green_ += pixel.green_;
         blue_  += pixel.blue_;
-        alpha_ += pixel.alpha_;
+        // alpha_ += pixel.alpha_;
+
+        return *this;
+    }
+
+    Pixel& operator-=(Pixel pixel) noexcept {
+        red_   -= pixel.red_; 
+        green_ -= pixel.green_;
+        blue_  -= pixel.blue_;
+        // alpha_ -= pixel.alpha_;
 
         return *this;
     }
@@ -117,6 +127,11 @@ class Pixel {
 template <typename T>
 Pixel<T> operator+(Pixel<T> pixel_a, Pixel<T> pixel_b) noexcept {
     return pixel_a += pixel_b;
+}
+
+template <typename T>
+Pixel<T> operator-(Pixel<T> pixel_a, Pixel<T> pixel_b) noexcept {
+    return pixel_a -= pixel_b;
 }
 
 template <typename T, typename U>
@@ -178,6 +193,6 @@ GSPixel<T> PixelToGSPixel(Pixel<T> pixel) {
     return new_gray;
 }
 
-} // namespace fcy
+} // namespace ftr
 
 #endif // PIXEL_HPP_

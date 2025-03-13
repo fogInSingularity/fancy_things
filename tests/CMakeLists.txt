@@ -18,10 +18,3 @@ target_link_libraries(${PROJECT_NAME}_tests
 )
 
 add_test(NAME ${PROJECT_NAME}_tests COMMAND ${PROJECT_NAME}_tests)
-
-CPMAddPackage(
-    NAME googletest
-    GITHUB_REPOSITORY google/googletest
-    GIT_TAG v1.16.0
-    OPTIONS "INSTALL_GTEST OFF"
-)

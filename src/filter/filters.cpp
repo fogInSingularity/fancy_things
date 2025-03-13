@@ -12,249 +12,275 @@
 
 #include "filter/pixel.hpp"
 #include "filter/matrix.hpp"
+#include "filter/utility.hpp"
+#include "filter/mat_op.hpp"
 
-namespace fcy {
+namespace ftr {
 
-static size_t ConvertIJtoLinIndex(size_t i, size_t j, size_t width, size_t height);
+// static size_t ConvertIJtoLinIndex(size_t i, size_t j, size_t width, size_t height);
 
 template <typename T>
 static Matrix<T> Normalize(const Matrix<T>& mat);
 
 template <typename T, typename U>
-static Matrix<GSPixel<U>> ConvertRGBImageToGrayScaleMat(const Pixel<T>* pixel_buf, size_t width, size_t height);
+static Matrix<GSPixel<U>> ConvertRGBImageToGrayScaleMat(const Matrix<Pixel<T>>& image);
 
 template <typename T, typename U>
-static void ConvertRGBImageToGrayScaleChanelsMats(const Pixel<T>* pixel_buf, size_t width, size_t height, 
+static void ConvertRGBImageToGrayScaleChanelsMats(const Matrix<Pixel<T>>& rgb_image, 
                                                   Matrix<GSPixel<U>>* red_ch_mat, Matrix<GSPixel<U>>* green_ch_mat, Matrix<GSPixel<U>>* blue_ch_mat);
 
 template <typename T, typename U>
-static void ConvertGrayScaleMatToRGBImage(const Matrix<GSPixel<U>>& gspixel_mat, Pixel<T>* pixel_buf);
+static void ConvertGrayScaleMatToRGBImage(const Matrix<GSPixel<U>>& gs_image, Matrix<Pixel<T>>* rgb_image);
 
 template <typename T, typename U>
 static void ConvertGrayScaleChanelsMatsToRGSImage(Matrix<GSPixel<U>>* red_ch_mat, Matrix<GSPixel<U>>* green_ch_mat, Matrix<GSPixel<U>>* blue_ch_mat,
-                                                  Pixel<T>* pixel_buf, size_t width, size_t height);
+                                                  Matrix<Pixel<T>>* rgb_image);
 
 template <typename T>
 static T NormalDistributionCurve(T mean_x, T mean_y, T stddev, T x, T y);
 
 // Filters ----------------------------------------------------------------------------------------
 
-void ReverseFilter::operator()(PixelU* pixel_buf, size_t width, size_t height) {
-    assert(pixel_buf != nullptr);
+void ReverseFilter::operator()(Matrix<PixelU>* image) {
+    assert(image != nullptr);
 
-    for (PixelU* iter_pixels = pixel_buf; iter_pixels < pixel_buf + width * height; iter_pixels++) {
-        iter_pixels->SetRedColor(UCHAR_MAX - iter_pixels->GetRedColor());
-        iter_pixels->SetGreenColor(UCHAR_MAX - iter_pixels->GetGreenColor());
-        iter_pixels->SetBlueColor(UCHAR_MAX - iter_pixels->GetBlueColor());
+    Size size = image->GetSize();
+
+    for (size_t i = 0; i < size.w; i++) {
+        for (size_t j = 0; j < size.h; j++) {
+            image->At(i, j) = PixelU{UCHAR_MAX, UCHAR_MAX, UCHAR_MAX} - image->At(i, j);
+        }
     }
 }
 
-void BoxBlurFilter::operator()(PixelU* pixel_buf, size_t width, size_t height) {
-    assert(pixel_buf != nullptr);
+void BoxBlurFilter::operator()(Matrix<PixelU>* image) {
+    assert(image != nullptr);
 
     // https://en.wikipedia.org/wiki/Box_blur
 
-    const size_t ker_dim_x = 5;
-    const size_t ker_dim_y = 5;
-
-    Matrix<float> blur_ker(ker_dim_x, ker_dim_y);
-    for (size_t i = 0; i < ker_dim_x; i++) {
-        for (size_t j = 0; j < ker_dim_y; j++) {
-            blur_ker.SetElem(i, j, 1.0);
+    Matrix<float> blur_ker{ker_size_};
+    for (size_t i = 0; i < ker_size_.w; i++) {
+        for (size_t j = 0; j < ker_size_.h; j++) {
+            blur_ker.At(i, j) = 1.0;
         }
     }
+    blur_ker = NormalizeTo1(blur_ker);
 
-    blur_ker.NormalizeTo1();
+    Size mat_size = image->GetSize();
 
-    Matrix<GSPixel<float>> red_ch_mat(width, height);
-    Matrix<GSPixel<float>> green_ch_mat(width, height);
-    Matrix<GSPixel<float>> blue_ch_mat(width, height);
+    Matrix<GSPixel<float>> red_ch_mat{mat_size};
+    Matrix<GSPixel<float>> green_ch_mat{mat_size};
+    Matrix<GSPixel<float>> blue_ch_mat{mat_size};
 
-    ConvertRGBImageToGrayScaleChanelsMats(pixel_buf, width, height, &red_ch_mat, &green_ch_mat, &blue_ch_mat);
+    ConvertRGBImageToGrayScaleChanelsMats(*image, &red_ch_mat, &green_ch_mat, &blue_ch_mat);
 
     auto conv_red_mat   = Convolution(red_ch_mat, blur_ker);
     auto conv_green_mat = Convolution(green_ch_mat, blur_ker);
     auto conv_blue_mat  = Convolution(blue_ch_mat, blur_ker);
 
-    ConvertGrayScaleChanelsMatsToRGSImage(&conv_red_mat, &conv_green_mat, &conv_blue_mat, pixel_buf, width, height);
+    ConvertGrayScaleChanelsMatsToRGSImage(&conv_red_mat, &conv_green_mat, &conv_blue_mat, image);
 }
 
-void GaussianBlurFilter::operator()(PixelU* pixel_buf, size_t width, size_t height) { 
-    assert(pixel_buf != nullptr);
+void GaussianBlurFilter::operator()(Matrix<PixelU>* image) { 
+    assert(image != nullptr);
 
     // https://en.wikipedia.org/wiki/Gaussian_blur
 
-    const size_t ker_dim_x = 3;
-    const size_t ker_dim_y = 3;
+    Matrix<float> blur_ker{ker_size_};
 
-    float mean = 0;
-    float stddev = 0.5;
+    for (size_t i = 0; i < ker_size_.w; i++) {
+        for (size_t j = 0; j < ker_size_.h; j++) {
+            int64_t x = static_cast<int64_t>(i) - ker_size_.w / 2;
+            int64_t y = static_cast<int64_t>(j) - ker_size_.h / 2;
 
-    Matrix<float> blur_ker(ker_dim_x, ker_dim_y);
-    for (size_t i = 0; i < ker_dim_x; i++) {
-        for (size_t j = 0; j < ker_dim_y; j++) {
-            int64_t x = static_cast<int64_t>(i) - ker_dim_x / 2;
-            int64_t y = static_cast<int64_t>(j) - ker_dim_y / 2;
-
-            float normal_value = NormalDistributionCurve<float>(mean, mean, stddev, x, y);
+            float normal_value = NormalDistributionCurve<float>(mean_, mean_, stddev_, x, y);
             spdlog::trace("[i:{}, j:{}] normal value: {}", i, j, normal_value);
-            blur_ker.SetElem(i, j, normal_value);
+            blur_ker.At(i, j) = normal_value;
         }
     }
 
-    blur_ker.NormalizeTo1();
+    blur_ker = NormalizeTo1(blur_ker);
 
-    Matrix<GSPixel<float>> red_ch_mat(width, height);
-    Matrix<GSPixel<float>> green_ch_mat(width, height);
-    Matrix<GSPixel<float>> blue_ch_mat(width, height);
+    Matrix<GSPixel<float>> red_ch_mat{image->GetSize()};
+    Matrix<GSPixel<float>> green_ch_mat{image->GetSize()};
+    Matrix<GSPixel<float>> blue_ch_mat{image->GetSize()};
 
-    ConvertRGBImageToGrayScaleChanelsMats(pixel_buf, width, height, &red_ch_mat, &green_ch_mat, &blue_ch_mat);
+    ConvertRGBImageToGrayScaleChanelsMats(*image, &red_ch_mat, &green_ch_mat, &blue_ch_mat);
 
     auto conv_red_mat   = Convolution(red_ch_mat, blur_ker);
     auto conv_green_mat = Convolution(green_ch_mat, blur_ker);
     auto conv_blue_mat  = Convolution(blue_ch_mat, blur_ker);
 
-    ConvertGrayScaleChanelsMatsToRGSImage(&conv_red_mat, &conv_green_mat, &conv_blue_mat, pixel_buf, width, height);
+    ConvertGrayScaleChanelsMatsToRGSImage(&conv_red_mat, &conv_green_mat, &conv_blue_mat, image);
 }
 
+void MotionBlurFilter::operator()(Matrix<PixelU>* image) { 
+    assert(image != nullptr);
 
-void MotionBlurFilter::operator()(PixelU* pixel_buf, size_t width, size_t height) { 
-    assert(pixel_buf != nullptr);
-
-    const size_t conv_dim_x = 15;
-    const size_t conv_dim_y = 15;
-
-    Matrix<float> motion_ker(conv_dim_x, conv_dim_y);
-    for (size_t i = 0; i < conv_dim_x; i++) {
-        motion_ker.SetElem(i, i, 1);
+    Matrix<float> motion_ker{ker_size_};
+    for (size_t i = 0; i < ker_size_.w; i++) {
+        motion_ker.At(i, i) = 1; // i = j
     }
-    motion_ker.NormalizeTo1();
+    motion_ker = NormalizeTo1(motion_ker);
 
-    Matrix<GSPixel<float>> red_ch_mat(width, height);
-    Matrix<GSPixel<float>> green_ch_mat(width, height);
-    Matrix<GSPixel<float>> blue_ch_mat(width, height);
+    Matrix<GSPixel<float>> red_ch_mat{image->GetSize()};
+    Matrix<GSPixel<float>> green_ch_mat{image->GetSize()};
+    Matrix<GSPixel<float>> blue_ch_mat{image->GetSize()};
 
-    ConvertRGBImageToGrayScaleChanelsMats(pixel_buf, width, height, &red_ch_mat, &green_ch_mat, &blue_ch_mat);
+    ConvertRGBImageToGrayScaleChanelsMats(*image, &red_ch_mat, &green_ch_mat, &blue_ch_mat);
 
     auto conv_red_mat   = Convolution(red_ch_mat, motion_ker);
     auto conv_green_mat = Convolution(green_ch_mat, motion_ker);
     auto conv_blue_mat  = Convolution(blue_ch_mat, motion_ker);
 
-    ConvertGrayScaleChanelsMatsToRGSImage(&conv_red_mat, &conv_green_mat, &conv_blue_mat, pixel_buf, width, height);
+    ConvertGrayScaleChanelsMatsToRGSImage(&conv_red_mat, &conv_green_mat, &conv_blue_mat, image);
 }
 
-void ThresholdFilter::operator()(PixelU* pixel_buf, size_t width, size_t height) {
-    assert(pixel_buf != nullptr);
+void ThresholdFilter::operator()(Matrix<PixelU>* image) {
+    assert(image != nullptr);
 
-    (void)width;
-    (void)height;
-
-    spdlog::error("threshold filter not implemented yet");
-}
-
-void EmbossingFilter::operator()(PixelU* pixel_buf, size_t width, size_t height) {
-    assert(pixel_buf != nullptr);
-
-    const size_t conv_dim_x = 3;
-    const size_t conv_dim_y = 3;
-
-    Matrix<float> emb_ker(conv_dim_x, conv_dim_y);
-    emb_ker = {
-        -2,  -1, 0,
-        -1,   1, 1,
-         0,   1, 2
-    };
-
-    Matrix<GSPixel<float>> gspixel_mat = ConvertRGBImageToGrayScaleMat<uint8_t, float>(pixel_buf, width, height);
-
-    Matrix<GSPixel<float>> emb_mat = Convolution(gspixel_mat, emb_ker);
-
-    Matrix<GSPixel<float>> norm_mat = Normalize(emb_mat);
-
-    ConvertGrayScaleMatToRGBImage(norm_mat, pixel_buf);
-}
-
-void EdgeDetectorSobelFilter::operator()(PixelU* pixel_buf, size_t width, size_t height) {
-    assert(pixel_buf != nullptr);
-
-    // Sobel operator
-    // https://en.wikipedia.org/wiki/Sobel_operator
-    
-    const size_t conv_dim_x = 3;
-    const size_t conv_dim_y = 3;
-
-    Matrix<float> grad_x_ker(conv_dim_x, conv_dim_y);
+    Matrix<float> grad_x_ker{ker_size_};
     grad_x_ker = {
         -1, 0, 1,
         -2, 0, 2,
         -1, 0, 1,
     };
 
-    Matrix<float> grad_y_ker(conv_dim_x, conv_dim_y);
+    Matrix<float> grad_y_ker{ker_size_};
     grad_y_ker = {
         -1, -2, -1,
          0,  0,  0,
          1,  2,  1,
     };
 
-    Matrix<GSPixel<float>> gspixel_mat = ConvertRGBImageToGrayScaleMat<uint8_t, float>(pixel_buf, width, height);
+    Matrix<GSPixel<float>> gspixel_mat = ConvertRGBImageToGrayScaleMat<uint8_t, float>(*image);
 
     Matrix<GSPixel<float>> grad_x = Convolution(gspixel_mat, grad_x_ker);
     Matrix<GSPixel<float>> grad_y = Convolution(gspixel_mat, grad_y_ker);
-        
-    auto grad_x2 = grad_x.Apply([](GSPixel<float> x){ return x * x; });
-    auto grad_y2 = grad_y.Apply([](GSPixel<float> x){ return x * x; });
+    
+    auto sqr_mat_elem = [](GSPixel<float> x){ return x * x; };
+    auto grad_x2 = Apply(grad_x, sqr_mat_elem);
+    auto grad_y2 = Apply(grad_y, sqr_mat_elem);
 
-    Matrix<GSPixel<float>> grad_magn = (grad_x2 + grad_y2).Apply([](GSPixel<float> x){ return sqrtf(x); });
+    auto sqrt_mat_elem = [](GSPixel<float> x){ return sqrtf(x); };
+    Matrix<GSPixel<float>> grad_magn = Apply(grad_x2 + grad_y2, sqrt_mat_elem);
 
     Matrix<GSPixel<float>> norm_mat = Normalize(grad_magn);
 
-    ConvertGrayScaleMatToRGBImage(norm_mat, pixel_buf);
+    Size image_size = image->GetSize();
+    Matrix<GSPixel<float>> final_mat{image_size};
+
+    for (size_t i = 0; i < image_size.w; i++) {
+        for (size_t j = 0; j < image_size.h; j++) {
+            final_mat.At(i, j) = norm_mat.At(i, j) > threshold_ ? 1 : 0;
+        }
+    }
+
+    ConvertGrayScaleMatToRGBImage(final_mat, image);
+
+    spdlog::error("threshold filter not implemented yet");
 }
 
-void EdgeDetectorLaplacianFilter::operator()(PixelU* pixel_buf, size_t width, size_t height) {
-    assert(pixel_buf != nullptr);
+void EmbossingFilter::operator()(Matrix<PixelU>* image) {
+    assert(image != nullptr);
 
-    const size_t conv_dim_x = 3;
-    const size_t conv_dim_y = 3;
+    Size ker_size = {3, 3};
+    Matrix<float> emb_ker{ker_size};
+    emb_ker = {
+        -2,  -1, 0,
+        -1,   1, 1,
+         0,   1, 2
+    };
 
-    Matrix<float> laplace_ker(conv_dim_x, conv_dim_y);
+    Matrix<GSPixel<float>> gspixel_mat = ConvertRGBImageToGrayScaleMat<uint8_t, float>(*image);
+
+    Matrix<GSPixel<float>> emb_mat = Convolution(gspixel_mat, emb_ker);
+
+    Matrix<GSPixel<float>> norm_mat = Normalize(emb_mat);
+
+    ConvertGrayScaleMatToRGBImage(norm_mat, image);
+}
+
+void EdgeDetectorSobelFilter::operator()(Matrix<PixelU>* image) {
+    assert(image != nullptr);
+
+    // Sobel operator
+    // https://en.wikipedia.org/wiki/Sobel_operator
+    
+    Size ker_size = {3, 3};
+
+    Matrix<float> grad_x_ker{ker_size};
+    grad_x_ker = {
+        -1, 0, 1,
+        -2, 0, 2,
+        -1, 0, 1,
+    };
+
+    Matrix<float> grad_y_ker{ker_size};
+    grad_y_ker = {
+        -1, -2, -1,
+         0,  0,  0,
+         1,  2,  1,
+    };
+
+    Matrix<GSPixel<float>> gspixel_mat = ConvertRGBImageToGrayScaleMat<uint8_t, float>(*image);
+
+    Matrix<GSPixel<float>> grad_x = Convolution(gspixel_mat, grad_x_ker);
+    Matrix<GSPixel<float>> grad_y = Convolution(gspixel_mat, grad_y_ker);
+       
+    auto sqr_mat_elem = [](GSPixel<float> x){ return x * x; };
+    auto grad_x2 = Apply(grad_x, sqr_mat_elem);
+    auto grad_y2 = Apply(grad_y, sqr_mat_elem);
+
+    auto sqrt_mat_elem = [](GSPixel<float> x){ return sqrtf(x); };
+    Matrix<GSPixel<float>> grad_magn = Apply(grad_x2 + grad_y2, sqrt_mat_elem);
+
+    Matrix<GSPixel<float>> norm_mat = Normalize(grad_magn);
+
+    ConvertGrayScaleMatToRGBImage(norm_mat, image);
+}
+
+void EdgeDetectorLaplacianFilter::operator()(Matrix<PixelU>* image) {
+    assert(image != nullptr);
+
+    Size ker_size = {3, 3};
+
+    Matrix<float> laplace_ker{ker_size};
     laplace_ker = {
         0,  1, 0,
         1, -4, 1,
         0,  1, 0
     };
 
-    Matrix<GSPixel<float>> gspixel_mat = ConvertRGBImageToGrayScaleMat<uint8_t, float>(pixel_buf, width, height);
+    Matrix<GSPixel<float>> gspixel_mat = ConvertRGBImageToGrayScaleMat<uint8_t, float>(*image);
 
     Matrix<GSPixel<float>> laplace_mat = Convolution(gspixel_mat, laplace_ker);
 
     Matrix<GSPixel<float>> norm_mat = Normalize(laplace_mat);
 
-    ConvertGrayScaleMatToRGBImage(norm_mat, pixel_buf);
+    ConvertGrayScaleMatToRGBImage(norm_mat, image);
 }
 
 // static -----------------------------------------------------------------------------------------
 
-static size_t ConvertIJtoLinIndex(size_t i, size_t j, size_t width, size_t height) {
-    (void)height;
-    return j * width + i;
-}
+// static size_t ConvertIJtoLinIndex(size_t i, size_t j, size_t width, size_t height) {
+//     (void)height;
+//     return j * width + i;
+// }
 
 template <typename T> // double float
 static Matrix<T> Normalize(const Matrix<T>& mat) {
     static_assert(std::is_arithmetic<T>());
     spdlog::trace("Normalize:");
 
-    size_t width  = mat.GetDimX();
-    size_t height = mat.GetDimY();
-
+    Size size = mat.GetSize();
+    
     T max_value = 0;
     T min_value = INFINITY;
 
-    for (size_t i = 0; i < width; i++) {
-        for (size_t j = 0; j < height; j++) {
-            T value = mat.GetElem(i, j);
+    for (size_t i = 0; i < size.w; i++) {
+        for (size_t j = 0; j < size.h; j++) {
+            T value = mat.At(i, j);
             max_value = std::max(value, max_value);
             min_value = std::min(value, min_value);
         }
@@ -262,19 +288,19 @@ static Matrix<T> Normalize(const Matrix<T>& mat) {
 
     spdlog::trace("min value: {}, max value: {}", min_value, max_value);
 
-    Matrix<T> norm_mat(width, height);
+    Matrix<T> norm_mat{size};
 
-    for (size_t i = 0; i < width; i++) {
-        for (size_t j = 0; j < height; j++) {
-            T value = mat.GetElem(i, j);
+    for (size_t i = 0; i < size.w; i++) {
+        for (size_t j = 0; j < size.h; j++) {
+            T value = mat.At(i, j);
             spdlog::trace("value: {}", value);
             // if (value < 0) {
             //     fcy_assert(0 && "negative value after convolution");
             // }
 
             T norm_value = ((value - min_value) / (max_value - min_value));
-            spdlog::trace("[{}, {}] norm value: {}", i, j, norm_value);
-            norm_mat.SetElem(i, j, T{norm_value});
+            // spdlog::trace("[{}, {}] norm value: {}", i, j, norm_value);
+            norm_mat.At(i, j) = norm_value;
         }
     }
 
@@ -282,18 +308,19 @@ static Matrix<T> Normalize(const Matrix<T>& mat) {
 }
 
 template <typename T, typename U>
-static Matrix<GSPixel<U>> ConvertRGBImageToGrayScaleMat(const Pixel<T>* pixel_buf, size_t width, size_t height) {
+static Matrix<GSPixel<U>> ConvertRGBImageToGrayScaleMat(const Matrix<Pixel<T>>& image) {
     static_assert(std::is_arithmetic<T>());
     static_assert(std::is_arithmetic<U>());
-    assert(pixel_buf != nullptr);
 
     spdlog::trace("ConvertRGBImageToGrayScale:");
 
-    Matrix<GSPixel<U>> gspixel_mat(width, height);
-    for (size_t i = 0; i < width; i++) {
-        for (size_t j = 0; j < height; j++) {    // NOTE -V-
-            GSPixel<float> gspixel = PixelToGSPixel(Pixel<U>{pixel_buf[ConvertIJtoLinIndex(i, j, width, height)]});
-            gspixel_mat.SetElem(i, j, gspixel);
+    Size image_size = image.GetSize();
+
+    Matrix<GSPixel<U>> gspixel_mat{image_size};
+    for (size_t i = 0; i < image_size.w; i++) {
+        for (size_t j = 0; j < image_size.h; j++) {    // NOTE -V-
+            GSPixel<float> gspixel = PixelToGSPixel(Pixel<U>{image.At(i, j)});
+            gspixel_mat.At(i, j) = gspixel;
         }     
     }
 
@@ -301,64 +328,66 @@ static Matrix<GSPixel<U>> ConvertRGBImageToGrayScaleMat(const Pixel<T>* pixel_bu
 }
 
 template <typename T, typename U>
-static void ConvertGrayScaleMatToRGBImage(const Matrix<GSPixel<U>>& gspixel_mat, Pixel<T>* pixel_buf) {
+static void ConvertRGBImageToGrayScaleChanelsMats(const Matrix<Pixel<T>>& rgb_image, 
+                                                  Matrix<GSPixel<U>>* red_ch_mat, Matrix<GSPixel<U>>* green_ch_mat, Matrix<GSPixel<U>>* blue_ch_mat) 
+{
     static_assert(std::is_arithmetic<T>());
     static_assert(std::is_arithmetic<U>());
-    assert(pixel_buf != nullptr);   
+    assert(red_ch_mat != nullptr);
+    assert(green_ch_mat != nullptr);
+    assert(blue_ch_mat != nullptr); 
 
-    spdlog::trace("ConvertGrayScaleMatToRGBImage");
+    Size image_size = rgb_image.GetSize();
 
-    size_t width = gspixel_mat.GetDimX();
-    size_t height = gspixel_mat.GetDimY();
-
-    for (size_t i = 0; i < width; i++) {
-        for (size_t j = 0; j < height; j++) {
-            pixel_buf[ConvertIJtoLinIndex(i, j, width, height)] = PixelU{GSPixelToPixel(gspixel_mat.GetElem(i, j))};
+    for (size_t i = 0; i < image_size.w; i++) {
+        for (size_t j = 0; j < image_size.h; j++) {
+            Pixel<T> pixel{rgb_image.At(i, j)};
+            red_ch_mat->At(i, j)   = GSPixel<U>{Pixel<U>{pixel}.GetRedColor()};
+            green_ch_mat->At(i, j) = GSPixel<U>{Pixel<U>{pixel}.GetGreenColor()};
+            blue_ch_mat->At(i, j)  = GSPixel<U>{Pixel<U>{pixel}.GetBlueColor()};
         }
     }
 }
 
 template <typename T, typename U>
-static void ConvertRGBImageToGrayScaleChanelsMats(const Pixel<T>* pixel_buf, size_t width, size_t height, 
-                                                  Matrix<GSPixel<U>>* red_ch_mat, Matrix<GSPixel<U>>* green_ch_mat, Matrix<GSPixel<U>>* blue_ch_mat) 
-{
+static void ConvertGrayScaleMatToRGBImage(const Matrix<GSPixel<U>>& gs_image, Matrix<Pixel<T>>* rgb_image) {
     static_assert(std::is_arithmetic<T>());
     static_assert(std::is_arithmetic<U>());
-    assert(pixel_buf != nullptr);   
-    assert(red_ch_mat != nullptr);
-    assert(green_ch_mat != nullptr);
-    assert(blue_ch_mat != nullptr); 
+    assert(rgb_image != nullptr);   
 
-    for (size_t i = 0; i < width; i++) {
-        for (size_t j = 0; j < height; j++) {
-            Pixel<T> pixel{pixel_buf[ConvertIJtoLinIndex(i, j, width, height)]};
-            red_ch_mat->SetElem(i, j, GSPixel<U>{Pixel<U>{pixel}.GetRedColor()});
-            green_ch_mat->SetElem(i, j, GSPixel<U>{Pixel<U>{pixel}.GetGreenColor()});
-            blue_ch_mat->SetElem(i, j, GSPixel<U>{Pixel<U>{pixel}.GetBlueColor()});
+    spdlog::trace("ConvertGrayScaleMatToRGBImage");
+
+    Size image_size = gs_image.GetSize();
+
+    for (size_t i = 0; i < image_size.w; i++) {
+        for (size_t j = 0; j < image_size.h; j++) {
+            rgb_image->At(i, j) = PixelU{GSPixelToPixel(gs_image.At(i, j))};
         }
     }
 }
 
 template <typename T, typename U>
 static void ConvertGrayScaleChanelsMatsToRGSImage(Matrix<GSPixel<U>>* red_ch_mat, Matrix<GSPixel<U>>* green_ch_mat, Matrix<GSPixel<U>>* blue_ch_mat,
-                                                  Pixel<T>* pixel_buf, size_t width, size_t height) 
+                                                  Matrix<Pixel<T>>* rgb_image) 
 {
     static_assert(std::is_arithmetic<T>());
     static_assert(std::is_arithmetic<U>());
-    assert(pixel_buf != nullptr);   
+    assert(rgb_image != nullptr);   
     assert(red_ch_mat != nullptr);
     assert(green_ch_mat != nullptr);
     assert(blue_ch_mat != nullptr); 
 
-    for (size_t i = 0; i < width; i++) {
-        for (size_t j = 0; j < height; j++) {
+    Size image_size = rgb_image->GetSize();
+
+    for (size_t i = 0; i < image_size.w; i++) {
+        for (size_t j = 0; j < image_size.h; j++) {
             Pixel<T> pixel;
 
-            pixel.SetRedColor(red_ch_mat->GetElem(i, j));
-            pixel.SetGreenColor(green_ch_mat->GetElem(i, j));
-            pixel.SetBlueColor(blue_ch_mat->GetElem(i, j));
+            pixel.SetRedColor(red_ch_mat->At(i, j));
+            pixel.SetGreenColor(green_ch_mat->At(i, j));
+            pixel.SetBlueColor(blue_ch_mat->At(i, j));
 
-            pixel_buf[ConvertIJtoLinIndex(i, j, width, height)] = pixel;
+            rgb_image->At(i, j) = pixel;
         }
     }   
 }
@@ -368,9 +397,10 @@ static T NormalDistributionCurve(T mean_x, T mean_y, T stddev, T x, T y) {
     // normal distribution in case of independent variables and curve itself is symetrical
     // https://en.wikipedia.org/wiki/Multivariate_normal_distribution
     // formula: f(x, y) = (1 / (2 * pi * stddev^2)) * exp(-0.5 * ((x - mean_x)^2 + (y - mean_y)^2) / stddev^2)
+
     auto sqr = [](T x){ return x * x; };
     T value_pre_exp = -0.5 * (sqr(x - mean_x) + sqr(y - mean_y)) / sqr(stddev);
     return (1 / (2 * std::numbers::pi_v<T> * sqr(stddev))) * std::exp(value_pre_exp);
 }
 
-} // namespace fcy
+} // namespace ftr
