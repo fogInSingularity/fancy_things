@@ -1,8 +1,13 @@
 name: build action
 on: [push, pull_request]
 jobs:
-  release_build:
+  build:
     runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        compiler: [g++, clang++]
+        generator: [Ninja, Unix Makefiles]
+        build_type: [Debug, Release]
     steps:
       - name: clone
         id: checkout
@@ -13,26 +18,8 @@ jobs:
           sudo apt-get install -y build-essential cmake libsfml-dev
       - name: build
         run: |
-          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake -S . -B build -G="${{matrix.generator}}" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=${{matrix.compiler}}
           cmake --build build --parallel `nproc`
-      - name: run tests
-        run: |
-          cd build
-          ctest --output-on-failure
-  debug_build:
-    runs-on: ubuntu-24.04
-    steps:
-      - name: clone
-        id: checkout
-        uses: actions/checkout@v4
-      - name: install deps
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential cmake libsfml-dev      
-      - name: build
-        run: |
-          cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
-          cmake --build build --parallel `nproc`      
       - name: run tests
         run: |
           cd build
