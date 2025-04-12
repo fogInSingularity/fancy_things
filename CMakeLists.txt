@@ -12,10 +12,11 @@ target_sources(${PROJECT_NAME}
         src/main.cpp
         src/filter/filters.cpp
         src/fcy_ui/fancy_things.cpp
+        src/bridge/thread_bridge.cpp
 )
 
 target_include_directories(${PROJECT_NAME}
-    PUBLIC
+    PRIVATE
         include/
 )
 
@@ -26,6 +27,7 @@ target_link_libraries(${PROJECT_NAME}
         sfml-window 
         sfml-system
         spdlog
+        dl
 )
 
 enable_testing()

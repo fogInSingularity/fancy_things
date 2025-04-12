@@ -47,7 +47,7 @@ Matrix<T> Convolution(const Matrix<T>& target, const Matrix<U>& kernel) {
                 }
             }
             
-            spdlog::trace("[{}, {}] sum value: {}", i, j, sum);
+            // spdlog::trace("[{}, {}] sum value: {}", i, j, sum);
             res_mat.At(i, j) = sum;
         }
     }

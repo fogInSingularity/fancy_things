@@ -12,6 +12,7 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ranges.h> // for initializer_list
 
+#include "helpers/traceable_exception.hpp"
 #include "filter/utility.hpp"
 
 namespace ftr {
@@ -21,6 +22,7 @@ class Matrix {
   private:
     Size size_;
     T* mat_memory_;
+    // std::vector<T> mat_memory_;
 
     size_t InternalIndex(size_t i, size_t j) const {
         return j * size_.w + i;
@@ -64,14 +66,6 @@ class Matrix {
         return mat_memory_[InternalIndex(i, j)];
     }
 
-    // void SetElemsFromMem(const T* mem) {
-    //     std::copy(mem, mem + size_.w * size_.h, mat_memory_);
-    // }
-
-    // void GetElemsToMem(T* mem) const {
-    //     std::copy(mat_memory_, mat_memory_ + size_.w * size_.h, mem);
-    // }
-    
     const T* GetData() const {
         return mat_memory_;
     }
@@ -82,6 +76,7 @@ Matrix<T> operator*(const Matrix<T>& matrix_a, const Matrix<T>& matrix_b);
 
 template<typename T>
 Matrix<T> operator+(const Matrix<T>& matrix_a, const Matrix<T>& matrix_b);
+
 // impl
 
 template <typename T>
@@ -102,6 +97,11 @@ Matrix<T>::Matrix(Size size, const std::initializer_list<T>& matrix_list)
 {
     spdlog::trace("Matrix constructor call: {} {}x{}", matrix_list, size_.w, size_.h);
 
+    if (matrix_list.size() > size.w * size.h) {
+        spdlog::error("size of std::initializer_list(= {}) bigger than size of matrix(= {}x{})", matrix_list.size(), size.w, size.h);
+        throw hlp::TraceableException("size of std::initializer_list bigger than size of matrix");
+    }
+
     std::copy(matrix_list.begin(), matrix_list.end(), mat_memory_);
 }
 
@@ -109,7 +109,7 @@ template <typename T>
 Matrix<T>::Matrix(const Matrix<T>& mat) 
     : size_{mat.size_}, mat_memory_{new T[mat.size_.w * mat.size_.h]{}}
 {
-    spdlog::trace("matrix copy constructor");
+    spdlog::trace("matrix copy constructor {}x{}", mat.size_.w, mat.size_.h);
 
     size_t area = size_.w * size_.h;
     std::copy(mat.mat_memory_, mat.mat_memory_ + area, mat_memory_);
@@ -127,7 +127,7 @@ Matrix<T>::Matrix(const Matrix<T>& mat)
 
 template <typename T>
 Matrix<T>& Matrix<T>::operator=(const Matrix<T>& mat) {
-    spdlog::trace("matrix copy assignment");
+    spdlog::trace("matrix copy assignment {}x{}", mat.size_.w, mat.size_.h);
     if (this == &mat) {
         return *this;
     }
@@ -142,7 +142,7 @@ Matrix<T>& Matrix<T>::operator=(const Matrix<T>& mat) {
 
 template <typename T> template <typename U>
 Matrix<T>& Matrix<T>::operator=(const Matrix<U>& mat) {
-    spdlog::trace("matrix copy assignment");
+    spdlog::trace("matrix copy assignmen {}x{}", mat.size_.w, mat.size_.h);
     if (this == &mat) {
         return *this;
     }
@@ -157,7 +157,7 @@ Matrix<T>& Matrix<T>::operator=(const Matrix<U>& mat) {
 
 template <typename T>
 Matrix<T>& Matrix<T>::operator=(std::initializer_list<T> matrix_list) {
-    spdlog::trace("matrix copy assignment");
+    spdlog::trace("matrix copy assignmen");
 
     delete[] mat_memory_;
     mat_memory_ = new T[matrix_list.size()];

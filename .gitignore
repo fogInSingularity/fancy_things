@@ -1,15 +1,24 @@
-.clang-tidy
-fancy_things.log
-fancy_things
+# lsp and ide specific:
 .cache/
 compile_commands.json
+
+# logs:
+fancy_things.log
+tests.log
+
+# other
 perf.data
 perf.data.old
+
+# build
 build
 dbuild
 rbuild
+
+# program produced
 *.png
 *jpeg
 images
+
+#test 
 Testing
-fancy_tests.log

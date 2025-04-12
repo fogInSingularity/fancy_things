@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <string>
+#include <thread>
 
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
@@ -10,7 +11,9 @@
 #include <spdlog/common.h>
 #include <spdlog/sinks/basic_file_sink.h>
 
-#include "fcy_ui/fancy_things.hpp"
+#include "filter/matrix.hpp"
+#include "filter/pixel.hpp"
+#include "bridge/thread_bridge.hpp"
 
 int main(const int argc, const char* argv[]) {
     // use when spdlog v2
@@ -26,7 +29,7 @@ int main(const int argc, const char* argv[]) {
     spdlog::set_level(spdlog::level::info);
 #else // NDEBUG
     // spdlog::flush_on(spdlog::level::trace);
-    spdlog::set_level(spdlog::level::debug);
+    spdlog::set_level(spdlog::level::trace);
 #endif // NDEBUG
     
     // log argv
@@ -40,28 +43,32 @@ int main(const int argc, const char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    sf::Image image;
+    sf::Image image{};
     bool is_load_successful = image.loadFromFile(std::string(argv[1]));
     if (!is_load_successful) {
         spdlog::error("Cant load image({})", argv[1]);
         std::cerr << "Cant load image(" << std::string(argv[1]) << ")" << std::endl;
         return EXIT_FAILURE;
     }
-
     sf::Vector2u image_size = image.getSize();
-
-    sf::RenderWindow window(sf::VideoMode(image_size.x, 
-                                          image_size.y), 
-                            fcy::WindowName);
-
-    fcy::RenderState render_state = {
-        .use_algo = false,
-        .save_image = false,
+    
+    ftr::Matrix<ftr::PixelU> raw_image{
+        {image_size.x, image_size.y}, 
+        reinterpret_cast<const ftr::PixelU*>(image.getPixelsPtr())
     };
 
-    while (window.isOpen()) {
-        fcy::MainLoop(&window, &image, &render_state);
-    }
+    brg::ThreadBridge thread_bridge{raw_image};
+
+    // create thread with ui and filters
+    std::thread image_render_thread{brg::ImageRenderDriver, &thread_bridge};
+    std::thread filter_thread{brg::FilterDriver, &thread_bridge};
+    std::thread user_choice_thread{brg::UserChoiceDriver, &thread_bridge};
+
+    image_render_thread.join();
+    filter_thread.join();
+    user_choice_thread.join();
+
+    spdlog::info("Exiting");
 
     return EXIT_SUCCESS;
 }

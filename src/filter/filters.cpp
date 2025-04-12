@@ -17,8 +17,6 @@
 
 namespace ftr {
 
-// static size_t ConvertIJtoLinIndex(size_t i, size_t j, size_t width, size_t height);
-
 template <typename T>
 static Matrix<T> Normalize(const Matrix<T>& mat);
 
@@ -88,13 +86,16 @@ void GaussianBlurFilter::operator()(Matrix<PixelU>* image) {
 
     Matrix<float> blur_ker{ker_size_};
 
-    for (size_t i = 0; i < ker_size_.w; i++) {
-        for (size_t j = 0; j < ker_size_.h; j++) {
-            int64_t x = static_cast<int64_t>(i) - ker_size_.w / 2;
-            int64_t y = static_cast<int64_t>(j) - ker_size_.h / 2;
+    auto small_size = SizeT<int>{ker_size_};
 
+    for (int i = 0; i < small_size.w; i++) {
+        for (int j = 0; j < small_size.h; j++) {
+            float x = static_cast<float>(i - small_size.w / 2);
+            float y = static_cast<float>(j - small_size.h / 2);
+            
             float normal_value = NormalDistributionCurve<float>(mean_, mean_, stddev_, x, y);
             spdlog::trace("[i:{}, j:{}] normal value: {}", i, j, normal_value);
+            
             blur_ker.At(i, j) = normal_value;
         }
     }
@@ -263,11 +264,6 @@ void EdgeDetectorLaplacianFilter::operator()(Matrix<PixelU>* image) {
 
 // static -----------------------------------------------------------------------------------------
 
-// static size_t ConvertIJtoLinIndex(size_t i, size_t j, size_t width, size_t height) {
-//     (void)height;
-//     return j * width + i;
-// }
-
 template <typename T> // double float
 static Matrix<T> Normalize(const Matrix<T>& mat) {
     static_assert(std::is_arithmetic<T>());
@@ -398,8 +394,8 @@ static T NormalDistributionCurve(T mean_x, T mean_y, T stddev, T x, T y) {
     // https://en.wikipedia.org/wiki/Multivariate_normal_distribution
     // formula: f(x, y) = (1 / (2 * pi * stddev^2)) * exp(-0.5 * ((x - mean_x)^2 + (y - mean_y)^2) / stddev^2)
 
-    auto sqr = [](T x){ return x * x; };
-    T value_pre_exp = -0.5 * (sqr(x - mean_x) + sqr(y - mean_y)) / sqr(stddev);
+    auto sqr = [](T val){ return val * val; };
+    T value_pre_exp = T{-0.5} * (sqr(x - mean_x) + sqr(y - mean_y)) / sqr(stddev);
     return (1 / (2 * std::numbers::pi_v<T> * sqr(stddev))) * std::exp(value_pre_exp);
 }
 

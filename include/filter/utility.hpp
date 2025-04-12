@@ -2,6 +2,7 @@
 #define UTILITY_HPP_
 
 #include <cstddef>
+#include <type_traits>
 
 namespace ftr {
 
@@ -9,13 +10,18 @@ namespace ftr {
 #define TO_STR(...) #__VA_ARGS__
 #endif // TO_STR
 
-class Size {
+template <typename T, typename = std::is_arithmetic<T>> 
+class SizeT {
   public:
-    size_t w = 0;
-    size_t h = 0;
+    T w = 0;
+    T h = 0;
   public:
-    Size(size_t width, size_t height) noexcept : w{width}, h{height} {}
+    SizeT(T width, T height) noexcept : w{width}, h{height} {}
+    template <typename U>
+    explicit SizeT(SizeT<U> size_u) : w{static_cast<T>(size_u.w)}, h{static_cast<T>(size_u.h)} {}
 };
+
+using Size = SizeT<size_t>;
 
 } // namespace ftr
 

@@ -13,8 +13,11 @@ target_include_directories(${PROJECT_NAME}_tests
 
 target_link_libraries(${PROJECT_NAME}_tests
     PRIVATE
+        fancy-defaults
+
         GTest::gtest_main
-        spdlog
+        spdlog    
+        # dl
 )
 
 add_test(NAME ${PROJECT_NAME}_tests COMMAND ${PROJECT_NAME}_tests)
