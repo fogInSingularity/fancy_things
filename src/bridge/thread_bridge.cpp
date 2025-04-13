@@ -1,8 +1,10 @@
 #include "bridge/thread_bridge.hpp"
 
 #include <iostream>
-
 #include <memory>
+#include <stdexcept>
+#include <string>
+
 #include <spdlog/spdlog.h>
 
 #include <SFML/Graphics.hpp>
@@ -49,22 +51,46 @@ void FilterDriver(ThreadBridge* thread_bridge) {
 void UserChoiceDriver(ThreadBridge* thread_bridge) {
     hlp::trace_call();
 
+    std::cout << "Enter number of 'q' to exit" << std::endl;
     for (int i = 0; i < FromEnum(ftr::FilterTypes::CountOfFilters); i++) {
         std::cout << "[" << i << "] " << ftr::FilterTypesToStr(ToEnum<ftr::FilterTypes>(i)) << std::endl;
     }
 
     while (!thread_bridge->IsFinished()) {
-        int in = 0;
-        std::cin >> in;
-        spdlog::debug("number entered: {}", in);
-
-        if (in <= FromEnum(ftr::FilterTypes::None) || in > FromEnum(ftr::FilterTypes::CountOfFilters)) {
+        std::string input_str;
+        std::getline(std::cin, input_str);
+        std::cout << "\033[1A\033[2K"; // clear
+        
+        if (input_str == "q") {
             break;
         }
 
-        ftr::FilterTypes filter_type = ToEnum<ftr::FilterTypes>(in);
+        int filter_num = 0;
+        try {
+            filter_num = std::stoi(input_str);
+        } catch (const std::invalid_argument& e) {
+            std::cout << "Enter number!" << std::endl;
+            break;
+        } catch (const std::out_of_range& e) {
+            std::cout << "Number is too big!" << std::endl;
+            break;
+        } catch (...) {
+            std::cout << "Unexpected error!" << std::endl;
+            break;
+        }
+         
+        spdlog::debug("number entered: {}", filter_num);
+
+        if (filter_num <= FromEnum(ftr::FilterTypes::None) || filter_num > FromEnum(ftr::FilterTypes::CountOfFilters)) {
+            break;
+        }
+
+        ftr::FilterTypes filter_type = ToEnum<ftr::FilterTypes>(filter_num);
         thread_bridge->PushFilter(filter_type);
     }
+
+    std::cin.clear();
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
     spdlog::debug("UserChoiceDriver finished");
 }
