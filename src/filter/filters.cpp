@@ -315,6 +315,7 @@ static Matrix<GSPixel<U>> ConvertRGBImageToGrayScaleMat(const Matrix<Pixel<T>>& 
     Matrix<GSPixel<U>> gspixel_mat{image_size};
     for (size_t i = 0; i < image_size.w; i++) {
         for (size_t j = 0; j < image_size.h; j++) {    // NOTE -V-
+            spdlog::trace("i: {}, j: {}", i, j);
             GSPixel<float> gspixel = PixelToGSPixel(Pixel<U>{image.At(i, j)});
             gspixel_mat.At(i, j) = gspixel;
         }     

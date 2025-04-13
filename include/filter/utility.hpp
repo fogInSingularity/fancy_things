@@ -16,9 +16,14 @@ class SizeT {
     T w = 0;
     T h = 0;
   public:
+    SizeT() = default;
     SizeT(T width, T height) noexcept : w{width}, h{height} {}
+    
+    SizeT(const SizeT& size) = default;
     template <typename U>
-    explicit SizeT(SizeT<U> size_u) : w{static_cast<T>(size_u.w)}, h{static_cast<T>(size_u.h)} {}
+    explicit SizeT(const SizeT<U>& size_u) : w{static_cast<T>(size_u.w)}, h{static_cast<T>(size_u.h)} {}
+    
+    SizeT& operator=(const SizeT& size) noexcept = default;
 };
 
 using Size = SizeT<size_t>;

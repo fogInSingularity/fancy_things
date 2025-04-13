@@ -3,11 +3,10 @@
 
 #include <cassert>
 #include <cstddef>
-#include <cstdint>
 #include <cstring>
-#include <algorithm>
 #include <initializer_list>
 #include <stdexcept>
+#include <vector>
 
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ranges.h> // for initializer_list
@@ -21,8 +20,7 @@ template <typename T>
 class Matrix {
   private:
     Size size_;
-    T* mat_memory_;
-    // std::vector<T> mat_memory_;
+    std::vector<T> mat_memory_;
 
     size_t InternalIndex(size_t i, size_t j) const {
         return j * size_.w + i;
@@ -30,20 +28,8 @@ class Matrix {
   public:
     explicit Matrix(Size size, const T* matrix_array = nullptr);
     Matrix(Size size, const std::initializer_list<T>& matrix_list);
-    Matrix(const Matrix& mat);
-
-    // template <typename U>
-    // explicit Matrix(const Matrix<U>& mat);
-    Matrix& operator=(const Matrix& mat);
     Matrix& operator=(std::initializer_list<T> matrix_list);
     
-    template <typename U>
-    Matrix& operator=(const Matrix<U>& mat); 
-
-    ~Matrix() {
-        delete[] mat_memory_;
-    }
-
     size_t Width()  const { return size_.w; };
     size_t Height() const { return size_.h; };
     Size GetSize()  const { return size_; }
@@ -67,7 +53,7 @@ class Matrix {
     }
 
     const T* GetData() const {
-        return mat_memory_;
+        return mat_memory_.data();
     }
 };
 
@@ -81,19 +67,23 @@ Matrix<T> operator+(const Matrix<T>& matrix_a, const Matrix<T>& matrix_b);
 
 template <typename T>
 Matrix<T>::Matrix(Size size, const T* matrix_array) 
-    : size_{size}, mat_memory_{new T[size.w * size.h]{}}
+    : size_{size}, mat_memory_{}
 {
     spdlog::trace("Matrix constructor call: {:p} {}x{}", reinterpret_cast<const void*>(matrix_array), size_.w, size_.h);
 
     size_t area = size_.w * size_.h;
+    mat_memory_.resize(area);
+
+    spdlog::trace("area: {}", area);
     if (matrix_array != nullptr) {
-        std::copy(matrix_array, matrix_array + area, mat_memory_);
+        mat_memory_.assign(matrix_array, matrix_array + area);
     }
+    spdlog::trace("vec size: {}", mat_memory_.size());
 }
 
 template <typename T>
 Matrix<T>::Matrix(Size size, const std::initializer_list<T>& matrix_list) 
-    : size_{size}, mat_memory_{new T[size.w * size.h]{}}
+    : size_{size}, mat_memory_{}
 {
     spdlog::trace("Matrix constructor call: {} {}x{}", matrix_list, size_.w, size_.h);
 
@@ -102,66 +92,15 @@ Matrix<T>::Matrix(Size size, const std::initializer_list<T>& matrix_list)
         throw hlp::TraceableException("size of std::initializer_list bigger than size of matrix");
     }
 
-    std::copy(matrix_list.begin(), matrix_list.end(), mat_memory_);
-}
-
-template <typename T>
-Matrix<T>::Matrix(const Matrix<T>& mat) 
-    : size_{mat.size_}, mat_memory_{new T[mat.size_.w * mat.size_.h]{}}
-{
-    spdlog::trace("matrix copy constructor {}x{}", mat.size_.w, mat.size_.h);
-
     size_t area = size_.w * size_.h;
-    std::copy(mat.mat_memory_, mat.mat_memory_ + area, mat_memory_);
-}
+    mat_memory_.resize(area);
 
-// template <typename T> template <typename U>
-// Matrix<T>::Matrix(const Matrix<U>& mat)
-//     : size_{mat.size_}, mat_memory_{new T[mat.size_.w * mat.size_.h]{}}
-// {
-//     spdlog::trace("matrix copy constructor");
-
-//     size_t area = size_.w * size_.h;
-//     std::copy(mat.mat_memory_, mat.mat_memory_ + area, mat_memory_);
-// }
-
-template <typename T>
-Matrix<T>& Matrix<T>::operator=(const Matrix<T>& mat) {
-    spdlog::trace("matrix copy assignment {}x{}", mat.size_.w, mat.size_.h);
-    if (this == &mat) {
-        return *this;
-    }
-
-    delete[] mat_memory_;
-    size_t area = mat.size_.w * mat.size_.h;
-    mat_memory_ = new T[area];
-    std::copy(mat.mat_memory_, mat.mat_memory_ + area, mat_memory_);
-
-    return *this;
-}
-
-template <typename T> template <typename U>
-Matrix<T>& Matrix<T>::operator=(const Matrix<U>& mat) {
-    spdlog::trace("matrix copy assignmen {}x{}", mat.size_.w, mat.size_.h);
-    if (this == &mat) {
-        return *this;
-    }
-
-    delete[] mat_memory_;
-    size_t area = mat.size_.w * mat.size_.h;
-    mat_memory_ = new T[area];
-    std::copy(mat.mat_memory_, mat.mat_memory_ + area, mat_memory_);
-
-    return *this;   
+    mat_memory_.assign(matrix_list.begin(), matrix_list.end());
 }
 
 template <typename T>
-Matrix<T>& Matrix<T>::operator=(std::initializer_list<T> matrix_list) {
-    spdlog::trace("matrix copy assignmen");
-
-    delete[] mat_memory_;
-    mat_memory_ = new T[matrix_list.size()];
-    std::copy(matrix_list.begin(), matrix_list.end(), mat_memory_);
+Matrix<T>& Matrix<T>::operator=(std::initializer_list<T> mat_list) {
+    mat_memory_.assign(mat_list.begin(), mat_list.end());
 
     return *this;
 }
