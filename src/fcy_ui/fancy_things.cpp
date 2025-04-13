@@ -63,8 +63,6 @@ void MainLoop(brg::ThreadBridge* thread_bridge) {
 
         CheckEvents(&window);
     }
-
-    thread_bridge->IsFinished(true);
 }
 
 // static ----------------------------------------------------------------------

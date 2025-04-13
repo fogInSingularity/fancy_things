@@ -25,6 +25,8 @@ void ImageRenderDriver(ThreadBridge* thread_bridge) {
     
     fcy::MainLoop(thread_bridge);
 
+    thread_bridge->IsFinished(true);
+
     spdlog::debug("ImageRenderDriver finished");
 }
 
@@ -32,17 +34,29 @@ void FilterDriver(ThreadBridge* thread_bridge) {
     hlp::trace_call();
 
     while (!thread_bridge->IsFinished()) {
-        if (!thread_bridge->IsQueueEmpty()) {
-            spdlog::debug("Filter in queue found");
-            auto filter_type = thread_bridge->PopFilter();
+        // if (!thread_bridge->IsQueueEmpty()) {
+        //     spdlog::debug("Filter in queue found");
+        //     auto filter_type = thread_bridge->PopFilter();
 
-            std::unique_ptr<ftr::IFilter> filter = ftr::ProduceFilter(filter_type);
-            auto mat = thread_bridge->CurrentImage();
-            (*filter)(&mat);
+        //     std::unique_ptr<ftr::IFilter> filter = ftr::ProduceFilter(filter_type);
+        //     auto mat = thread_bridge->CurrentImage();
+        //     (*filter)(&mat);
 
-            thread_bridge->UpdateImage(mat);
-            spdlog::debug("Image updated");
+        //     thread_bridge->UpdateImage(mat);
+        //     spdlog::debug("Image updated");
+        // }
+        
+        auto filter_type = thread_bridge->WaitOnQueueForFilter();        
+        if (filter_type == ftr::FilterTypes::None) {
+            break;
         }
+
+        std::unique_ptr<ftr::IFilter> filter = ftr::ProduceFilter(filter_type);
+        auto mat = thread_bridge->CurrentImage();
+        (*filter)(&mat);
+
+        thread_bridge->UpdateImage(mat);
+        spdlog::debug("Image updated");
     }
 
     spdlog::debug("FilterDriver finished");
@@ -52,8 +66,8 @@ void UserChoiceDriver(ThreadBridge* thread_bridge) {
     hlp::trace_call();
 
     std::cout << "Enter number of 'q' to exit" << std::endl;
-    for (int i = 0; i < FromEnum(ftr::FilterTypes::CountOfFilters); i++) {
-        std::cout << "[" << i << "] " << ftr::FilterTypesToStr(ToEnum<ftr::FilterTypes>(i)) << std::endl;
+    for (int i = 0; i < hlp::FromEnum(ftr::FilterTypes::CountOfFilters); i++) {
+        std::cout << "[" << i << "] " << ftr::FilterTypesToStr(hlp::ToEnum<ftr::FilterTypes>(i)) << std::endl;
     }
 
     while (!thread_bridge->IsFinished()) {
@@ -81,16 +95,18 @@ void UserChoiceDriver(ThreadBridge* thread_bridge) {
          
         spdlog::debug("number entered: {}", filter_num);
 
-        if (filter_num <= FromEnum(ftr::FilterTypes::None) || filter_num > FromEnum(ftr::FilterTypes::CountOfFilters)) {
+        if (filter_num <= hlp::FromEnum(ftr::FilterTypes::None) || filter_num > hlp::FromEnum(ftr::FilterTypes::CountOfFilters)) {
             break;
         }
 
-        ftr::FilterTypes filter_type = ToEnum<ftr::FilterTypes>(filter_num);
+        ftr::FilterTypes filter_type = hlp::ToEnum<ftr::FilterTypes>(filter_num);
         thread_bridge->PushFilter(filter_type);
     }
 
     std::cin.clear();
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+    thread_bridge->IsFinished(true);
 
     spdlog::debug("UserChoiceDriver finished");
 }

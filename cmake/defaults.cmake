@@ -10,7 +10,9 @@ target_compile_features(${TARGET}
 target_compile_options(${TARGET}
     INTERFACE
         -fdiagnostics-color=always
-        
+ 
+        -Wno-interference-size
+
         -Wall
         -Wextra
         -Wpedantic

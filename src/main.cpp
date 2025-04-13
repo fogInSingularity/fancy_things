@@ -14,6 +14,7 @@
 #include "filter/matrix.hpp"
 #include "filter/pixel.hpp"
 #include "bridge/thread_bridge.hpp"
+#include "helpers/common.hpp"
 
 int main(const int argc, const char* argv[]) {
     // use when spdlog v2
@@ -31,7 +32,8 @@ int main(const int argc, const char* argv[]) {
     spdlog::flush_on(spdlog::level::trace);
     spdlog::set_level(spdlog::level::trace);
 #endif // NDEBUG
-    
+ 
+    spdlog::info("program pid: {}", hlp::GetPid());
     // log argv
     for (int i = 0; i < argc; i++) {
         spdlog::info("argv[{}]: {}", i, argv[i]);
