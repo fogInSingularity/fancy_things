@@ -45,13 +45,13 @@ constexpr inline std::string_view FilterTypesToStr(FilterTypes filter_type) {
 
 class IFilter {
   public:
-    virtual ~IFilter() {};
+    virtual ~IFilter() = default;
     virtual void operator()(Matrix<PixelU>* image) = 0;
 };
 
 class ReverseFilter : public IFilter {
   public:
-    ~ReverseFilter() override {};
+    ~ReverseFilter() override = default;
     void operator()(Matrix<PixelU>* image) override;
 };
 
@@ -61,7 +61,7 @@ class BoxBlurFilter : public IFilter {
   public:
     explicit BoxBlurFilter(Size size = {5, 5}) : ker_size_{size} {}
 
-    ~BoxBlurFilter() override {};
+    ~BoxBlurFilter() override = default;
     void operator()(Matrix<PixelU>* image) override;
 };
 
@@ -74,7 +74,7 @@ class GaussianBlurFilter : public IFilter {
     explicit GaussianBlurFilter(Size ker_size = {3, 3}, float mean = 0.0f, float stddev = 0.5f) 
         : ker_size_{ker_size}, mean_{mean}, stddev_{stddev} {}
 
-    ~GaussianBlurFilter() override {};
+    ~GaussianBlurFilter() override = default;
     void operator()(Matrix<PixelU>* image) override;
 };
 
@@ -85,7 +85,7 @@ class MotionBlurFilter : public IFilter {
     explicit MotionBlurFilter(Size ker_size = {15, 15}) 
         : ker_size_{ker_size} {}
 
-    ~MotionBlurFilter() override {};
+    ~MotionBlurFilter() override = default;
     void operator()(Matrix<PixelU>* image) override;
 };
 
@@ -94,35 +94,37 @@ class ThresholdFilter : public IFilter {
     Size ker_size_;
     float threshold_;
   public:
-    explicit ThresholdFilter(Size ker_size = {3, 3}, float threashold = 0.16f) 
-        : ker_size_{ker_size}, threshold_{threashold} {}
+    explicit ThresholdFilter(Size ker_size = {3, 3}, float threshold = 0.16f) 
+        : ker_size_{ker_size}, threshold_{threshold} {}
 
-    ~ThresholdFilter() override {};
+    ~ThresholdFilter() override = default;
     void operator()(Matrix<PixelU>* image) override;
 };
 
 class EmbossingFilter : public IFilter {
   public:
-    ~EmbossingFilter() override {};
+    ~EmbossingFilter() override = default;
     void operator()(Matrix<PixelU>* image) override;
 };
 
 class EdgeDetectorSobelFilter : public IFilter {
   public:
-    ~EdgeDetectorSobelFilter() override {};
+    ~EdgeDetectorSobelFilter() override = default;
     void operator()(Matrix<PixelU>* image) override;
 };
 
 class EdgeDetectorLaplacianFilter : public IFilter {
   public:
-    ~EdgeDetectorLaplacianFilter() override {};
+    ~EdgeDetectorLaplacianFilter() override = default;
     void operator()(Matrix<PixelU>* image) override;
 };
 
 class IdentityFilter : public IFilter {
   public:
-    ~IdentityFilter() override {};
-    void operator()([[maybe_unused]] Matrix<PixelU>* image) override {};
+    ~IdentityFilter() override = default;
+    void operator()([[maybe_unused]] Matrix<PixelU>* image) override {
+        // do nothing
+    };
 };
 
 inline std::unique_ptr<IFilter> ProduceFilter(FilterTypes filter_type) {
@@ -140,7 +142,8 @@ inline std::unique_ptr<IFilter> ProduceFilter(FilterTypes filter_type) {
         case CountOfFilters: 
         default:
             return std::make_unique<IdentityFilter>();
-    }}
+    }
+}
 
 } // namespace ftr
 

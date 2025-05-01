@@ -30,8 +30,8 @@ class Matrix {
     Matrix(Size size, const std::initializer_list<T>& matrix_list);
     Matrix& operator=(std::initializer_list<T> matrix_list);
     
-    size_t Width()  const { return size_.w; };
-    size_t Height() const { return size_.h; };
+    size_t Width()  const { return size_.w; }
+    size_t Height() const { return size_.h; }
     Size GetSize()  const { return size_; }
 
     T& At(size_t i, size_t j) {
@@ -139,7 +139,7 @@ template<typename T>
 Matrix<T> operator+(const Matrix<T>& matrix_a, const Matrix<T>& matrix_b) {
     spdlog::trace("Matrix<T>operator+ call");
     if ((matrix_a.Width() != matrix_b.Width()) || (matrix_a.Height() != matrix_b.Height())) {
-        spdlog::error("invalid matrix sizes for multiplication"); 
+        spdlog::error("matrix operator+ invalid dimentions passed"); 
         throw std::invalid_argument{"matrix operator+ invalid dimentions passed"};
     }
 

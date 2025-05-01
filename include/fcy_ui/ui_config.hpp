@@ -1,12 +1,12 @@
 #ifndef UI_CONFIG_HPP_
 #define UI_CONFIG_HPP_
 
+#include <string_view>
+
 namespace fcy {
 
-constinit const char* WindowName = "fancy thigs";
-// constinit const unsigned int WindowWidth  = 1920;
-// constinit const unsigned int WindowHeight = 1080;
+constexpr inline std::string_view WindowName = "fancy things";
 
-} // namespace fcy;
+} // namespace fcy
 
 #endif // UI_CONFIG_HPP_

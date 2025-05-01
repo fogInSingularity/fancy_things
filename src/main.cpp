@@ -16,6 +16,9 @@
 #include "bridge/thread_bridge.hpp"
 #include "helpers/common.hpp"
 
+// распаралеллить 
+// сделать 
+
 int main(const int argc, const char* argv[]) {
     // use when spdlog v2
     // auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("fancy_things.log", true);

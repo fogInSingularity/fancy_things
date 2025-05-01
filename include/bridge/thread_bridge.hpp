@@ -40,24 +40,6 @@ class ThreadBridge {
         has_filters_in_queue_.notify_one();
     }
 
-    // ftr::FilterTypes PopFilter() {
-    //     hlp::trace_call();
-    //     std::unique_lock g{mutex_};
-
-    //     ftr::FilterTypes filter_type = filters_queue_.front();
-    //     filters_queue_.pop();
-
-    //     return filter_type;
-    // }
-
-    // bool IsQueueEmpty() {
-    //     std::unique_lock g{mutex_};
-
-    //     bool is_empty = filters_queue_.empty();
-
-    //     return is_empty;
-    // }
-
     ftr::FilterTypes WaitOnQueueForFilter() {
         std::unique_lock g{mutex_};
 

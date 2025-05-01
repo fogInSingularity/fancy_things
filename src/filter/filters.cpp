@@ -178,8 +178,6 @@ void ThresholdFilter::operator()(Matrix<PixelU>* image) {
     }
 
     ConvertGrayScaleMatToRGBImage(final_mat, image);
-
-    spdlog::error("threshold filter not implemented yet");
 }
 
 void EmbossingFilter::operator()(Matrix<PixelU>* image) {

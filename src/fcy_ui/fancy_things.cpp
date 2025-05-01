@@ -28,7 +28,7 @@ namespace fcy {
 static void CheckEvents(sf::RenderWindow* window);
 static sf::Sprite ConvertMatToSprite(const ftr::Matrix<ftr::PixelU>& mat, sf::Texture* image_texture);
 
-static std::string GenerateUniqueFileName(const std::string& file_prefix, const std::string& file_extension);
+// static std::string GenerateUniqueFileName(const std::string& file_prefix, const std::string& file_extension);
 
 // global ----------------------------------------------------------------------
 
@@ -42,7 +42,7 @@ void MainLoop(brg::ThreadBridge* thread_bridge) {
     auto small_image_size = ftr::SizeT<unsigned>{image_size};
     sf::RenderWindow window(sf::VideoMode(small_image_size.w,
                                           small_image_size.h), 
-                            fcy::WindowName);
+                            fcy::WindowName.data());
 
     sf::Texture image_texture{};
     sf::Sprite image_sprite{};
@@ -90,7 +90,6 @@ static sf::Sprite ConvertMatToSprite(const ftr::Matrix<ftr::PixelU>& mat, sf::Te
 
     ftr::Size image_size = mat.GetSize();
 
-
     auto small_image_size = ftr::SizeT<unsigned>{image_size};
 
     sf::Image image{};
@@ -103,14 +102,14 @@ static sf::Sprite ConvertMatToSprite(const ftr::Matrix<ftr::PixelU>& mat, sf::Te
     return image_sprite;
 }
 
-static std::string GenerateUniqueFileName(const std::string& file_prefix, const std::string& file_extension) {
-    auto now = std::chrono::system_clock::now();
-    auto in_time_t = std::chrono::system_clock::to_time_t(now);
+// static std::string GenerateUniqueFileName(const std::string& file_prefix, const std::string& file_extension) {
+//     auto now = std::chrono::system_clock::now();
+//     auto in_time_t = std::chrono::system_clock::to_time_t(now);
 
-    std::stringstream unique_name_time;
-    unique_name_time << std::put_time(std::localtime(&in_time_t), "%Y-%m-%d_%H-%M-%S"); // Format time
+//     std::stringstream unique_name_time;
+//     unique_name_time << std::put_time(std::localtime(&in_time_t), "%Y-%m-%d_%H-%M-%S"); // Format time
 
-    return file_prefix + "_" + unique_name_time.str() + "." + file_extension;
-}
+//     return file_prefix + "_" + unique_name_time.str() + "." + file_extension;
+// }
 
 } // namespace fcy

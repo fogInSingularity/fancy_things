@@ -10,7 +10,7 @@ namespace ftr {
 #define TO_STR(...) #__VA_ARGS__
 #endif // TO_STR
 
-template <typename T, typename = std::is_arithmetic<T>> 
+template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>> > 
 class SizeT {
   public:
     T w = 0;

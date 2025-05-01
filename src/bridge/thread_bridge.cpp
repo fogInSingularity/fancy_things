@@ -7,11 +7,6 @@
 
 #include <spdlog/spdlog.h>
 
-#include <SFML/Graphics.hpp>
-#include <SFML/System.hpp>
-#include <SFML/System/Vector2.hpp>
-#include <SFML/Window.hpp>
-
 #include "helpers/common.hpp"
 #include "helpers/trace_calls.hpp"
 #include "filter/filters.hpp"
@@ -33,19 +28,7 @@ void ImageRenderDriver(ThreadBridge* thread_bridge) {
 void FilterDriver(ThreadBridge* thread_bridge) {
     hlp::trace_call();
 
-    while (!thread_bridge->IsFinished()) {
-        // if (!thread_bridge->IsQueueEmpty()) {
-        //     spdlog::debug("Filter in queue found");
-        //     auto filter_type = thread_bridge->PopFilter();
-
-        //     std::unique_ptr<ftr::IFilter> filter = ftr::ProduceFilter(filter_type);
-        //     auto mat = thread_bridge->CurrentImage();
-        //     (*filter)(&mat);
-
-        //     thread_bridge->UpdateImage(mat);
-        //     spdlog::debug("Image updated");
-        // }
-        
+    while (!thread_bridge->IsFinished()) {     
         auto filter_type = thread_bridge->WaitOnQueueForFilter();        
         if (filter_type == ftr::FilterTypes::None) {
             break;

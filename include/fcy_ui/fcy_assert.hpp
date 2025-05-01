@@ -8,9 +8,9 @@
 #include "spdlog/spdlog.h"
 
 #if defined (NDEBUG)
-#define fcy_assert(...) (void)0
+#define fcy_assert(expr) (void)0
 #else // NDEBUG
-#define fcy_assert(...) fcy_assert_(__VA_ARGS__, #__VA_ARGS__, __FILE__, __LINE__, __func__)
+#define fcy_assert(expr) fcy_assert_(expr, #expr, __FILE__, __LINE__, __func__)
 #endif // NDEBUG
 
 inline void fcy_assert_(bool expr, const char* expr_str, const char* src_file, int src_line, const char* src_func) {
@@ -18,11 +18,11 @@ inline void fcy_assert_(bool expr, const char* expr_str, const char* src_file, i
 
     std::cerr << "fcy_assert failed: " << std::string(expr_str) << "\n";
     std::cerr << "location: " 
-              << std::string(src_file) 
+              << src_file
               << ":" 
               << src_line 
               << " in function: " 
-              << std::string(src_func) 
+              << src_func
               << "\n";
 
     spdlog::critical("fcy_assert failed: {} ", expr_str);
