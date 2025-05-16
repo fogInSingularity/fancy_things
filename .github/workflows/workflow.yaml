@@ -6,7 +6,9 @@ jobs:
     container: foginsingularity/cpp_image:24.04.4
     strategy:
       matrix:
-        compiler: [g++, clang++]
+        compiler: 
+          - { cc: gcc, cxx: g++ }
+          - { cc: clang, cxx: clang++ }
         generator: [Ninja, Unix Makefiles]
         build_type: [Debug, Release]
     steps:
@@ -19,7 +21,10 @@ jobs:
           # sudo apt-get install -y build-essential cmake libsfml-dev
       - name: build
         run: |
-          cmake -S . -B build -G="${{matrix.generator}}" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=${{matrix.compiler}}
+          cmake -S . -B build -G="${{matrix.generator}}" \
+            -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
+            -DCMAKE_C_COMPILER=${{matrix.compiler.cc}} \
+            -DCMAKE_CXX_COMPILER=${{matrix.compiler.cxx}}
           cmake --build build --parallel `nproc`
       - name: run tests
         run: |
